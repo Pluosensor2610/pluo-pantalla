@@ -206,8 +206,7 @@
   // en vez de solo dejar el log.
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      console.log('Sesión activa:', user.email, user.uid);
-      // TODO Etapa 2: mostrar lista de unidades
+      window.location.href = 'unidades.html';
     }
   });
 
@@ -222,9 +221,8 @@
     const password = document.getElementById('password').value;
 
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Login OK:', cred.user.uid);
-      // TODO Etapa 2: cargar lista de unidades
+      await signInWithEmailAndPassword(auth, email, password);
+      // onAuthStateChanged se encarga de la redirección a unidades.html
     } catch (err) {
       mensajeError.className = 'mensaje error';
       mensajeError.textContent = 'No se pudo iniciar sesión. Verifica correo y contraseña.';
@@ -238,4 +236,3 @@
 
 </body>
 </html>
-
