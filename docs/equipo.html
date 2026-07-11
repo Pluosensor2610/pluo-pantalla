@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pluo — Equipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #1976D2;
+    --texto: #1A2B33;
+    --texto-tenue: #6B7C85;
+    --blanco: #FFFFFF;
+    --fondo: #F4F7F9;
+    --gris: #B9C2C6;
+    --rojo: #E24C4C;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--fondo);
+    font-family: 'Manrope', sans-serif;
+    color: var(--texto);
+  }
+
+  header {
+    background: var(--azul);
+    color: var(--blanco);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  #btnVolver {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: var(--blanco);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  header .titulos { flex: 1; min-width: 0; }
+  header h1 {
+    font-size: 16px;
+    margin: 0;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  header p {
+    font-size: 11px;
+    margin: 0;
+    opacity: 0.85;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .punto-conexion {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--gris);
+    flex-shrink: 0;
+  }
+  .punto-conexion.conectado { background: #2FB65A; }
+
+  main {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  .grid-sectores {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .tarjeta-sector {
+    background: var(--blanco);
+    border-radius: 12px;
+    padding: 12px 6px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+
+  .tarjeta-sector .nombre {
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .circulo-icono {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gris);
+    margin: 0 auto 8px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+  }
+
+  .circulo-icono svg { width: 37px; height: 37px; }
+
+  .tarjeta-sector .estado-texto {
+    font-size: 10px;
+    color: var(--texto-tenue);
+  }
+
+  .mensaje-cargando {
+    text-align: center;
+    color: var(--texto-tenue);
+    padding: 60px 20px;
+    font-size: 14px;
+    grid-column: 1 / -1;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="btnVolver">‹</button>
+  <div class="titulos">
+    <h1 id="nombreEquipo">Cargando…</h1>
+    <p id="deviceIdTexto"></p>
+  </div>
+  <div class="punto-conexion" id="puntoConexion"></div>
+</header>
+
+<main>
+  <div class="grid-sectores" id="gridSalidas">
+    <p class="mensaje-cargando">Cargando salidas…</p>
+  </div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+  import {
+    getFirestore, collection, query, where, getDocs
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDfW9yzIoBAGxCvxZs6679Qn0_df_rkfZg",
+    authDomain: "pluo-pantalla.firebaseapp.com",
+    projectId: "pluo-pantalla",
+    storageBucket: "pluo-pantalla.firebasestorage.app",
+    messagingSenderId: "432080738709",
+    appId: "1:432080738709:web:6b83df90372f981fa27e9c"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // El equipo tiene 12 salidas físicas configurables individualmente
+  // (RIEGO / BOMBA / BOMBA_INY / VALV_INY / AUX), según el campo "tipo"
+  // que responde cada GETSALIDA:n.
+  const NUM_SALIDAS = 12;
+
+  const COLOR_POR_TIPO = {
+    RIEGO:     '#2FB65A',
+    BOMBA:     '#1976D2',
+    BOMBA_INY: '#F5821F',
+    VALV_INY:  '#F5821F',
+    AUX:       '#00B8A9'
+  };
+
+  const NOMBRE_POR_TIPO = {
+    RIEGO:     'Sector de Riego',
+    BOMBA:     'Bomba',
+    BOMBA_INY: 'Bomba Inyectora',
+    VALV_INY:  'Válvula Inyectora',
+    AUX:       'Auxiliar'
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const deviceId = params.get('id');
+
+  const nombreEquipo = document.getElementById('nombreEquipo');
+  const deviceIdTexto = document.getElementById('deviceIdTexto');
+  const gridSalidas = document.getElementById('gridSalidas');
+  const puntoConexion = document.getElementById('puntoConexion');
+  const btnVolver = document.getElementById('btnVolver');
+
+  btnVolver.addEventListener('click', () => {
+    window.location.href = 'unidades.html';
+  });
+
+  if (!deviceId) {
+    nombreEquipo.textContent = 'Equipo no especificado';
+    gridSalidas.innerHTML = '<p class="mensaje-cargando">Falta el parámetro ?id= en la URL.</p>';
+  } else {
+    deviceIdTexto.textContent = deviceId;
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
+      }
+      await cargarEquipo(user.uid, deviceId);
+    });
+  }
+
+  async function cargarEquipo(uid, deviceId) {
+    const q = query(
+      collection(db, 'unidades'),
+      where('cliente_ref', '==', uid),
+      where('device_id', '==', deviceId)
+    );
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      nombreEquipo.textContent = 'Equipo no encontrado';
+      gridSalidas.innerHTML = '<p class="mensaje-cargando">No tienes acceso a este equipo o no existe.</p>';
+      return;
+    }
+
+    const unidad = snap.docs[0].data();
+    nombreEquipo.textContent = unidad.nombre || deviceId;
+
+    construirTarjetasSalidas(NUM_SALIDAS);
+    conectarMQTT(unidad, deviceId);
+  }
+
+  // --- Íconos por tipo (accent = color según estado, se pasa como parámetro) ---
+
+  function iconoValvula(accent) {
+    return `
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="4" width="4" height="10" fill="white"/>
+        <rect x="20" y="4" width="24" height="4" rx="1" fill="white"/>
+        <rect x="29" y="14" width="6" height="6" fill="white"/>
+        <rect x="22" y="26" width="20" height="16" rx="2" fill="white"/>
+        <circle cx="32" cy="34" r="4" fill="${accent}"/>
+        <rect x="6" y="24" width="4" height="20" fill="white"/>
+        <rect x="10" y="28" width="4" height="12" fill="white"/>
+        <rect x="14" y="30" width="8" height="8" fill="white"/>
+        <rect x="54" y="24" width="4" height="20" fill="white"/>
+        <rect x="50" y="28" width="4" height="12" fill="white"/>
+        <rect x="42" y="30" width="8" height="8" fill="white"/>
+      </svg>
+    `;
+  }
+
+  function iconoBomba(accent) {
+    return `
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="30" width="10" height="8" rx="1.5" fill="white"/>
+        <rect x="12" y="22" width="20" height="24" rx="2" fill="white"/>
+        <rect x="16" y="27" width="12" height="2.4" fill="${accent}"/>
+        <rect x="16" y="32" width="12" height="2.4" fill="${accent}"/>
+        <rect x="16" y="37" width="12" height="2.4" fill="${accent}"/>
+        <circle cx="42" cy="34" r="15" fill="white"/>
+        <circle cx="42" cy="34" r="5" fill="${accent}"/>
+        <circle cx="42" cy="21" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
+        <circle cx="55" cy="34" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
+        <circle cx="42" cy="47" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
+        <circle cx="29" cy="34" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
+        <rect x="50" y="6" width="8" height="10" rx="1.5" fill="white"/>
+        <rect x="49" y="14" width="10" height="6" fill="white"/>
+        <rect x="10" y="46" width="44" height="4" rx="1" fill="white"/>
+        <rect x="16" y="50" width="5" height="5" fill="white"/>
+        <rect x="43" y="50" width="5" height="5" fill="white"/>
+      </svg>
+    `;
+  }
+
+  function iconoAux() {
+    return `
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="26" r="16" stroke="white" stroke-width="4" fill="none"/>
+        <path d="M24 6 L24 22" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    `;
+  }
+
+  function generarIcono(tipo, accent) {
+    if (tipo === 'RIEGO' || tipo === 'VALV_INY') return iconoValvula(accent);
+    if (tipo === 'BOMBA' || tipo === 'BOMBA_INY') return iconoBomba(accent);
+    if (tipo === 'AUX') return iconoAux();
+    return ''; // tipo desconocido / aún sin datos
+  }
+
+  function construirTarjetasSalidas(n) {
+    gridSalidas.innerHTML = '';
+    for (let i = 1; i <= n; i++) {
+      const div = document.createElement('div');
+      div.className = 'tarjeta-sector';
+      div.id = `salida-${i}`;
+      div.innerHTML = `
+        <div class="nombre" id="nombre-${i}">Salida ${i}</div>
+        <div class="circulo-icono" id="icono-${i}"></div>
+        <div class="estado-texto" id="estado-${i}">Consultando…</div>
+      `;
+      gridSalidas.appendChild(div);
+    }
+  }
+
+  function conectarMQTT(unidad, deviceId) {
+    const client = mqtt.connect('wss://e0b71edcce184b74a7a5a87fc9d2b605.s1.eu.hivemq.cloud:8884/mqtt', {
+      username: 'pluo_web_client',
+      password: 'Pluo2610',
+      clientId: 'web_equipo_' + Math.random().toString(16).slice(2)
+    });
+
+    const timeouts = {};
+
+    client.on('connect', () => {
+      puntoConexion.classList.add('conectado');
+      client.subscribe(`pluo/${deviceId}/resp`);
+
+      for (let i = 1; i <= NUM_SALIDAS; i++) {
+        client.publish(`pluo/${deviceId}/cmd`, `${unidad.token_observador}:GETSALIDA:${i}`);
+        timeouts[i] = setTimeout(() => {
+          actualizarSalida(i, null, 'sin_datos');
+        }, 4000);
+      }
+    });
+
+    client.on('message', (topic, mensaje) => {
+      const texto = mensaje.toString();
+
+      if (texto.startsWith('SAL:')) {
+        // SAL:n:tipo:sector_asoc:nombre:caudal_esperado:estado_on_off
+        // NOTA: parseo por posición según protocolo documentado.
+        // Si el firmware cambia el orden/cantidad de campos, actualizar
+        // aquí y en mqtt.cpp en el mismo commit.
+        const partes = texto.split(':');
+        const n = parseInt(partes[1], 10);
+        const tipo = partes[2];
+        const nombreSalida = partes[4];
+        const estadoOnOff = partes[6];
+
+        clearTimeout(timeouts[n]);
+
+        const nombreEl = document.getElementById(`nombre-${n}`);
+        if (nombreEl) {
+          nombreEl.textContent = nombreSalida || NOMBRE_POR_TIPO[tipo] || `Salida ${n}`;
+        }
+
+        const activo = (estadoOnOff === '1' || estadoOnOff === 'ON');
+        actualizarSalida(n, tipo, activo ? 'activo' : 'inactivo');
+      }
+    });
+
+    client.on('error', (err) => {
+      console.error('Error MQTT:', err);
+      puntoConexion.classList.remove('conectado');
+    });
+  }
+
+  function actualizarSalida(n, tipo, estado) {
+    const circulo = document.getElementById(`icono-${n}`);
+    const texto = document.getElementById(`estado-${n}`);
+    if (!circulo || !texto) return;
+
+    let color = '#B9C2C6'; // gris (inactivo / sin datos)
+    let etiqueta = 'No activo';
+
+    if (estado === 'alerta') {
+      color = '#E24C4C';
+      etiqueta = 'Alerta';
+    } else if (estado === 'activo') {
+      color = COLOR_POR_TIPO[tipo] || '#2FB65A';
+      etiqueta = 'Activo';
+    } else if (estado === 'sin_datos') {
+      etiqueta = 'Sin datos';
+    }
+
+    circulo.style.background = color;
+    circulo.innerHTML = tipo ? generarIcono(tipo, color) : '';
+    texto.textContent = etiqueta;
+  }
+</script>
+
+<script src="https://unpkg.com/mqtt@5.10.0/dist/mqtt.min.js"></script>
+
+</body>
+</html>
