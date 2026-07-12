@@ -131,6 +131,99 @@
     font-size: 14px;
     grid-column: 1 / -1;
   }
+
+  /* --- Sección Programas (desplegable) --- */
+  .seccion-programas {
+    background: var(--blanco);
+    border-radius: 12px;
+    margin-top: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .seccion-programas .cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .seccion-programas .cabecera h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--texto-tenue);
+    margin: 0;
+  }
+  .seccion-programas .flecha {
+    transition: transform 0.2s ease;
+    color: var(--texto-tenue);
+    font-size: 14px;
+  }
+  .seccion-programas.abierta .flecha { transform: rotate(180deg); }
+  .seccion-programas .cuerpo {
+    display: none;
+    padding: 0 16px 16px 16px;
+  }
+  .seccion-programas.abierta .cuerpo { display: block; }
+
+  select.campo, input.campo {
+    background: var(--fondo);
+    border: 1px solid var(--gris);
+    border-radius: 6px;
+    color: var(--texto);
+    padding: 8px;
+    font-size: 12px;
+    font-family: 'Manrope', sans-serif;
+    width: 100%;
+  }
+  .fila-doble { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .fila-triple { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+
+  button.btn-accion {
+    background: var(--azul);
+    color: var(--blanco);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button.btn-accion:active { opacity: 0.8; }
+  button.btn-secundario {
+    background: transparent;
+    color: var(--texto);
+    border: 1px solid var(--gris);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .tarjeta-sector-prog {
+    border: 1px solid var(--gris);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+
+  .toast-guardado {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--texto);
+    color: var(--blanco);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 100;
+  }
+  .toast-guardado.visible { opacity: 1; }
 </style>
 </head>
 <body>
@@ -148,7 +241,45 @@
   <div class="grid-sectores" id="gridSalidas">
     <p class="mensaje-cargando">Cargando salidas…</p>
   </div>
+
+  <div class="seccion-programas" id="seccionProgramas">
+    <div class="cabecera" id="cabeceraProgramas">
+      <h2>Programas de Riego</h2>
+      <span class="flecha">▾</span>
+    </div>
+    <div class="cuerpo">
+      <div class="fila-triple">
+        <select class="campo" id="progSeleccionado">
+          <option value="0">Riego</option>
+          <option value="1">Aux 1</option>
+          <option value="2">Aux 2</option>
+        </select>
+        <button class="btn-secundario" id="btnCargarPrograma">Cargar actual</button>
+        <button class="btn-accion" id="btnGuardarPrograma">Guardar programa</button>
+      </div>
+
+      <div class="fila-doble">
+        <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
+          <input type="checkbox" id="progActivo"> Activo
+        </label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
+          <input type="checkbox" id="progLoop"> Loop
+        </label>
+      </div>
+
+      <div class="fila-doble">
+        <input class="campo" type="number" id="progHora" placeholder="Hora inicio (0-23)" min="0" max="23">
+        <input class="campo" type="number" id="progMin" placeholder="Minuto inicio (0-59)" min="0" max="59">
+      </div>
+
+      <div id="diasSemana" style="display:flex; gap:6px; margin-bottom:14px;"></div>
+
+      <div id="filasSectoresPrograma"></div>
+    </div>
+  </div>
 </main>
+
+<div class="toast-guardado" id="toastGuardado"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
@@ -174,6 +305,8 @@
   // (RIEGO / BOMBA / BOMBA_INY / VALV_INY / AUX), según el campo "tipo"
   // que responde cada GETSALIDA:n.
   const NUM_SALIDAS = 14;
+  const MAX_SECTORES = 10;
+  const DIAS = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
 
   const COLOR_POR_TIPO = {
     RIEGO:     '#2FB65A',
@@ -236,6 +369,9 @@
     nombreEquipo.textContent = unidad.nombre || deviceId;
 
     construirTarjetasSalidas(NUM_SALIDAS);
+    construirDiasSemana();
+    construirFilasSectoresPrograma();
+    inicializarSeccionProgramas();
     conectarMQTT(unidad, deviceId);
   }
 
@@ -313,6 +449,163 @@
     }
   }
 
+  // ============================================================
+  // Programas de Riego (SETPROG / SETSECTOR / SETFERT — nivel Operador)
+  // ============================================================
+
+  let tokenOperador = null;
+  let publicarComandoOperador = null;
+
+  function mostrarToast(msg) {
+    const toast = document.getElementById('toastGuardado');
+    toast.textContent = msg;
+    toast.classList.add('visible');
+    setTimeout(() => toast.classList.remove('visible'), 2200);
+  }
+
+  function inicializarSeccionProgramas() {
+    const seccion = document.getElementById('seccionProgramas');
+    const cabecera = document.getElementById('cabeceraProgramas');
+    cabecera.addEventListener('click', () => {
+      seccion.classList.toggle('abierta');
+    });
+
+    document.getElementById('progSeleccionado').addEventListener('change', construirFilasSectoresPrograma);
+    document.getElementById('btnCargarPrograma').addEventListener('click', cargarPrograma);
+    document.getElementById('btnGuardarPrograma').addEventListener('click', guardarPrograma);
+  }
+
+  function construirDiasSemana() {
+    const cont = document.getElementById('diasSemana');
+    cont.innerHTML = DIAS.map((d, i) => `
+      <label style="display:flex; flex-direction:column; align-items:center; gap:2px; font-size:11px; color:var(--texto-tenue);">
+        <input type="checkbox" id="dia-${i}">
+        ${d}
+      </label>
+    `).join('');
+  }
+
+  function construirFilasSectoresPrograma() {
+    const esAux = document.getElementById('progSeleccionado').value !== '0';
+    const cont = document.getElementById('filasSectoresPrograma');
+    cont.innerHTML = '';
+    for (let s = 0; s < MAX_SECTORES; s++) {
+      const div = document.createElement('div');
+      div.className = 'tarjeta-sector-prog';
+      div.innerHTML = `
+        <div class="fila-triple" style="margin-bottom:${esAux ? '0' : '8px'};">
+          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
+            <input type="checkbox" id="sec-hab-${s}"> Sector ${s + 1}
+          </label>
+          <input class="campo" type="number" id="sec-hh-${s}" placeholder="hh" min="0" max="23">
+          <input class="campo" type="number" id="sec-mm-${s}" placeholder="mm" min="0" max="59">
+        </div>
+        ${esAux ? '' : `
+        <div class="fila-doble" style="margin-bottom:6px;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
+            <input type="checkbox" id="sec-fert-activa-${s}" onchange="window.toggleFertSector(${s})"> Fertilización
+          </label>
+          <select class="campo" id="sec-fert-tipo-${s}">
+            <option value="1">Directo (litros objetivo)</option>
+            <option value="2">Fraccionado (pulsos adaptativos)</option>
+          </select>
+        </div>
+        <div class="fila-triple" id="sec-fert-campos-${s}" style="display:none;">
+          <input class="campo" type="number" id="sec-fert-litros-${s}" placeholder="Litros">
+          <input class="campo" type="number" id="sec-fert-antes-${s}" placeholder="Agua antes (min)">
+          <input class="campo" type="number" id="sec-fert-despues-${s}" placeholder="Agua después (min)">
+        </div>`}
+        <button class="btn-secundario" style="width:100%; margin-top:4px;" data-sector="${s}">
+          Guardar sector ${s + 1}
+        </button>
+      `;
+      div.querySelector('button[data-sector]').addEventListener('click', () => guardarSector(s));
+      cont.appendChild(div);
+    }
+  }
+
+  window.toggleFertSector = function (s) {
+    const activa = document.getElementById(`sec-fert-activa-${s}`).checked;
+    const campos = document.getElementById(`sec-fert-campos-${s}`);
+    if (campos) campos.style.display = activa ? 'grid' : 'none';
+  };
+
+  function cargarPrograma() {
+    if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
+    const idx = document.getElementById('progSeleccionado').value;
+    publicarComandoOperador(`GETPROG:${idx}`);
+    for (let s = 0; s < MAX_SECTORES; s++) {
+      publicarComandoOperador(`GETSECTOR:${idx}:${s}`);
+    }
+  }
+
+  function guardarPrograma() {
+    if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
+    const idx = document.getElementById('progSeleccionado').value;
+    const activo = document.getElementById('progActivo').checked ? 1 : 0;
+    const loop = document.getElementById('progLoop').checked ? 1 : 0;
+    const esAux = idx !== '0' ? 1 : 0;
+    const hora = document.getElementById('progHora').value || '0';
+    const min = document.getElementById('progMin').value || '0';
+    const dias = DIAS.map((_, i) => document.getElementById(`dia-${i}`).checked ? 1 : 0).join(':');
+    publicarComandoOperador(`SETPROG:${idx}:${activo}:${loop}:${esAux}:${hora}:${min}:${dias}`);
+    mostrarToast('Programa guardado.');
+  }
+
+  function guardarSector(s) {
+    if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
+    const idx = document.getElementById('progSeleccionado').value;
+    const hab = document.getElementById(`sec-hab-${s}`).checked ? 1 : 0;
+    const hh = document.getElementById(`sec-hh-${s}`).value || '0';
+    const mm = document.getElementById(`sec-mm-${s}`).value || '0';
+    publicarComandoOperador(`SETSECTOR:${idx}:${s}:${hab}:${hh}:${mm}`);
+
+    // Solo el programa de riego (idx=0) tiene fertilización
+    if (idx === '0') {
+      const fertActiva = document.getElementById(`sec-fert-activa-${s}`).checked ? 1 : 0;
+      const fertTipo = document.getElementById(`sec-fert-tipo-${s}`).value;
+      const litros = document.getElementById(`sec-fert-litros-${s}`).value || '0';
+      const antes = document.getElementById(`sec-fert-antes-${s}`).value || '0';
+      const despues = document.getElementById(`sec-fert-despues-${s}`).value || '0';
+      publicarComandoOperador(`SETFERT:${idx}:${s}:${fertActiva}:${fertTipo}:${litros}:${antes}:${despues}`);
+    }
+    mostrarToast(`Sector ${s + 1} guardado.`);
+  }
+
+  // Parser de respuestas PROG:/SEC: para precargar la UI tras GETPROG/GETSECTOR
+  function procesarRespuestaPrograma(msg) {
+    if (msg.startsWith('PROG:')) {
+      const p = msg.split(':');
+      const idxSel = document.getElementById('progSeleccionado').value;
+      if (p[1] !== idxSel) return;
+      document.getElementById('progActivo').checked = p[2] === '1';
+      document.getElementById('progLoop').checked = p[3] === '1';
+      document.getElementById('progHora').value = p[5];
+      document.getElementById('progMin').value = p[6];
+      for (let i = 0; i < 7; i++) {
+        const chk = document.getElementById(`dia-${i}`);
+        if (chk) chk.checked = p[7 + i] === '1';
+      }
+    } else if (msg.startsWith('SEC:')) {
+      const p = msg.split(':');
+      const idxSel = document.getElementById('progSeleccionado').value;
+      if (p[1] !== idxSel) return;
+      const s = parseInt(p[2], 10);
+      document.getElementById(`sec-hab-${s}`).checked = p[3] === '1';
+      document.getElementById(`sec-hh-${s}`).value = p[4];
+      document.getElementById(`sec-mm-${s}`).value = p[5];
+      const fertActiva = document.getElementById(`sec-fert-activa-${s}`);
+      if (fertActiva) {
+        fertActiva.checked = p[6] === '1';
+        document.getElementById(`sec-fert-tipo-${s}`).value = p[7];
+        document.getElementById(`sec-fert-litros-${s}`).value = p[8];
+        document.getElementById(`sec-fert-antes-${s}`).value = p[9];
+        document.getElementById(`sec-fert-despues-${s}`).value = p[10];
+        window.toggleFertSector(s);
+      }
+    }
+  }
+
   function conectarMQTT(unidad, deviceId) {
     const client = mqtt.connect('wss://e0b71edcce184b74a7a5a87fc9d2b605.s1.eu.hivemq.cloud:8884/mqtt', {
       username: 'pluo_web_client',
@@ -321,6 +614,12 @@
     });
 
     const timeouts = {};
+
+    tokenOperador = unidad.token_operador || null;
+    publicarComandoOperador = (comando) => {
+      if (!tokenOperador) { mostrarToast('Este equipo no tiene token_operador configurado.'); return; }
+      client.publish(`pluo/${deviceId}/cmd`, `${tokenOperador}:${comando}`);
+    };
 
     client.on('connect', () => {
       puntoConexion.classList.add('conectado');
@@ -336,6 +635,11 @@
 
     client.on('message', (topic, mensaje) => {
       const texto = mensaje.toString();
+
+      if (texto.startsWith('PROG:') || texto.startsWith('SEC:')) {
+        procesarRespuestaPrograma(texto);
+        return;
+      }
 
     if (texto.startsWith('SAL:')) {
         // SAL:n:tipo:sector_asoc:nombre:caudal_esperado:estado_on_off
