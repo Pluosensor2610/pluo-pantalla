@@ -337,11 +337,8 @@
     client.on('message', (topic, mensaje) => {
       const texto = mensaje.toString();
 
-      if (texto.startsWith('SAL:')) {
+    if (texto.startsWith('SAL:')) {
         // SAL:n:tipo:sector_asoc:nombre:caudal_esperado:estado_on_off
-        // NOTA: parseo por posición según protocolo documentado.
-        // Si el firmware cambia el orden/cantidad de campos, actualizar
-        // aquí y en mqtt.cpp en el mismo commit.
         const partes = texto.split(':');
         const n = parseInt(partes[1], 10);
         const tipo = partes[2];
@@ -349,6 +346,16 @@
         const estadoOnOff = partes[6];
 
         clearTimeout(timeouts[n]);
+
+        const tarjeta = document.getElementById(`salida-${n}`);
+
+        // Salidas sin tipo asignado no se muestran al cliente -- solo
+        // interesan las que realmente están en uso.
+        if (tipo === 'SIN_USAR') {
+          if (tarjeta) tarjeta.style.display = 'none';
+          return;
+        }
+        if (tarjeta) tarjeta.style.display = '';
 
         const nombreEl = document.getElementById(`nombre-${n}`);
         if (nombreEl) {
