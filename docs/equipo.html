@@ -647,7 +647,7 @@
       div.innerHTML = `
         <div class="fila-triple" style="margin-bottom:${esAux ? '0' : '8px'};">
           <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-            <input type="checkbox" id="sec-hab-${s}"> ${esAux ? (salidasInfo[Object.keys(salidasInfo).find(n => salidasInfo[n].tipo === 'AUX' && salidasInfo[n].sectorAsoc === s)]?.nombre || `Salida (sector ${s})`) : `Sector ${s}`}
+            <input type="checkbox" id="sec-hab-${s}"> ${(() => { const k = Object.keys(salidasInfo).find(n => salidasInfo[n].sectorAsoc === s && salidasInfo[n].tipo === (esAux ? 'AUX' : 'RIEGO')); return k ? salidasInfo[k].nombre : `Sector ${s}`; })()}
           </label>
           <input class="campo" type="number" id="sec-hh-${s}" placeholder="hh" min="0" max="23">
           <input class="campo" type="number" id="sec-mm-${s}" placeholder="mm" min="0" max="59">
@@ -1135,7 +1135,7 @@
         const nombreSalida = partes[4];
         const estadoOnOff = partes[6];
 
-        salidasInfo[n] = { tipo, sectorAsoc };
+        salidasInfo[n] = { tipo, sectorAsoc, nombre: nombreSalida };
         // Refrescar la lista de sectores del programa que se esté viendo
         // -- tanto Riego (debe excluir sectores AUX) como Aux1/Aux2 (debe
         // incluir solo los AUX) dependen de esta info de salidas.
