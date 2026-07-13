@@ -607,14 +607,20 @@
     const cont = document.getElementById('filasSectoresPrograma');
     cont.innerHTML = '';
 
-    // En Aux1/Aux2 solo tiene sentido mostrar sectores que tengan una
-    // salida tipo AUX asociada -- no salidas de riego/bomba, que las
-    // controla exclusivamente el programa Riego.
-    const sectoresAMostrar = esAux ? sectoresAuxDisponibles()
-                                    : Array.from({length: MAX_SECTORES}, (_, i) => i);
+    // Aux1/Aux2: solo sectores con salida AUX asociada.
+    // Riego: todos MENOS los que tengan salida AUX asociada (esos son
+    // exclusivos de los auxiliares, Riego no debe poder tocarlos).
+    const sectoresAux = new Set(sectoresAuxDisponibles());
+    const sectoresAMostrar = esAux
+      ? [...sectoresAux]
+      : Array.from({length: MAX_SECTORES}, (_, i) => i).filter(s => !sectoresAux.has(s));
 
     if (esAux && sectoresAMostrar.length === 0) {
       cont.innerHTML = '<p class="mensaje-cargando">No hay salidas tipo AUX configuradas. Configúralas en la sección de Salidas.</p>';
+      return;
+    }
+    if (!esAux && sectoresAMostrar.length === 0) {
+      cont.innerHTML = '<p class="mensaje-cargando">Todos los sectores están asignados a salidas auxiliares.</p>';
       return;
     }
 
@@ -1099,11 +1105,10 @@
         const estadoOnOff = partes[6];
 
         salidasInfo[n] = { tipo, sectorAsoc };
-        // Si se está viendo un programa auxiliar, refrescar la lista de
-        // sectores por si esta salida cambia qué sectores AUX existen.
-        if (document.getElementById('progSeleccionado').value !== '0') {
-          construirFilasSectoresPrograma();
-        }
+        // Refrescar la lista de sectores del programa que se esté viendo
+        // -- tanto Riego (debe excluir sectores AUX) como Aux1/Aux2 (debe
+        // incluir solo los AUX) dependen de esta info de salidas.
+        construirFilasSectoresPrograma();
 
         clearTimeout(timeouts[n]);
 
