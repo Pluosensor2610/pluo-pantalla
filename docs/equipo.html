@@ -827,13 +827,13 @@
     }
     for (const n in salidasInfo) {
       const info = salidasInfo[n];
+      if (info.tipo === 'BOMBA') continue; // Estado de bomba viene de GETSALIDA, no de EST:
       let activo = false;
       for (let i = 0; i < NUM_PROGRAMAS_WEB; i++) {
         const est = estadosPrograma[i];
         if (!est || !est.ejecutando) continue;
         if (i < 5) {
           if (info.tipo === 'RIEGO' && info.sectorAsoc === est.sector + 1) { activo = true; break; }
-          if (info.tipo === 'BOMBA') { activo = true; break; }
           if (info.tipo === 'BOMBA_INY' && est.estadoInterno >= 2) { activo = true; break; }
           if (info.tipo === 'VALV_INY' && est.estadoInterno >= 2) { activo = true; break; }
         } else {
@@ -841,6 +841,14 @@
         }
       }
       actualizarSalida(parseInt(n), info.tipo, activo ? 'activo' : 'inactivo');
+    }
+    // Actualizar BOMBA según si hay algún programa de riego (0-4) ejecutando
+    const hayRiegoActivo = Array.from({length: 5}, (_, i) => estadosPrograma[i])
+      .some(est => est && est.ejecutando);
+    for (const n in salidasInfo) {
+      if (salidasInfo[n].tipo === 'BOMBA') {
+        actualizarSalida(parseInt(n), 'BOMBA', hayRiegoActivo ? 'activo' : 'inactivo');
+      }
     }
   }
 
