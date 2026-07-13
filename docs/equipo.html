@@ -273,6 +273,17 @@
     font-weight: 700;
     cursor: pointer;
   }
+  .btn-detener-todo {
+    background: var(--azul);
+    color: var(--blanco);
+    border: none;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-detener-todo.activo { background: #E24C4C; }
 </style>
 </head>
 <body>
@@ -302,6 +313,7 @@
       <button class="btn-pausa" id="btnPausarWeb">Pausar Riego</button>
       <button class="btn-saltar" id="btnSaltarWeb">Saltar sector (Riego)</button>
     </div>
+    <button class="btn-detener-todo" id="btnDetenerTodoWeb" style="width:100%; margin-top:8px;">Detener todo</button>
   </div>
 
   <div class="seccion-programas" id="seccionProgramas">
@@ -774,6 +786,10 @@
       btnPausar.textContent = 'Pausar Riego';
       btnPausar.classList.remove('en-pausa');
     }
+
+    // Botón Detener todo -- rojo si Riego, Aux1 o Aux2 está corriendo
+    const algunoCorriendo = [0, 1, 2].some(i => estadosPrograma[i] && estadosPrograma[i].ejecutando);
+    document.getElementById('btnDetenerTodoWeb').classList.toggle('activo', algunoCorriendo);
   }
 
   function inicializarControlesEstado() {
@@ -785,6 +801,10 @@
     document.getElementById('btnSaltarWeb').addEventListener('click', () => {
       if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
       publicarComandoOperador('SALTAR');
+    });
+    document.getElementById('btnDetenerTodoWeb').addEventListener('click', () => {
+      if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
+      publicarComandoOperador('DETENERTODO');
     });
   }
 
