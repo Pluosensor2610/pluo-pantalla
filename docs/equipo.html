@@ -821,32 +821,30 @@
   }
 
   function actualizarLogosPorEstado() {
-    // Esperar a tener respuesta de todos los programas antes de actualizar
     for (let i = 0; i < NUM_PROGRAMAS_WEB; i++) {
       if (!estadosPrograma[i]) return;
     }
     for (const n in salidasInfo) {
       const info = salidasInfo[n];
-      if (info.tipo === 'BOMBA') continue; // Estado de bomba viene de GETSALIDA, no de EST:
-      let activo = false;
+      if (info.tipo === 'BOMBA') continue;
+      let estado = 'inactivo';
+      let manejado = false;
       for (let i = 0; i < NUM_PROGRAMAS_WEB; i++) {
         const est = estadosPrograma[i];
         if (!est || !est.ejecutando) continue;
         if (i < 5) {
-        if (info.tipo === 'RIEGO' && info.sectorAsoc === est.sector + 1) {
-          actualizarSalida(parseInt(n), info.tipo, est.pausado ? 'alerta' : 'activo');
-          activo = false; // ya fue manejado
-          break;
-        }
-          if (info.tipo === 'BOMBA_INY' && est.estadoInterno >= 2) { activo = true; break; }
-          if (info.tipo === 'VALV_INY' && est.estadoInterno >= 2) { activo = true; break; }
+          if (info.tipo === 'RIEGO' && info.sectorAsoc === est.sector + 1) {
+            estado = est.pausado ? 'alerta' : 'activo';
+            manejado = true; break;
+          }
+          if (info.tipo === 'BOMBA_INY' && est.estadoInterno >= 2) { estado = 'activo'; manejado = true; break; }
+          if (info.tipo === 'VALV_INY' && est.estadoInterno >= 2) { estado = 'activo'; manejado = true; break; }
         } else {
-          if (info.tipo === 'AUX' && info.sectorAsoc === est.sector + 1) { activo = true; break; }
+          if (info.tipo === 'AUX' && info.sectorAsoc === est.sector + 1) { estado = 'activo'; manejado = true; break; }
         }
       }
-      actualizarSalida(parseInt(n), info.tipo, activo ? 'activo' : 'inactivo');
+      actualizarSalida(parseInt(n), info.tipo, estado);
     }
-    // Actualizar BOMBA según si hay algún programa de riego (0-4) ejecutando
     const hayRiegoActivo = Array.from({length: 5}, (_, i) => estadosPrograma[i])
       .some(est => est && est.ejecutando);
     for (const n in salidasInfo) {
@@ -854,6 +852,7 @@
         actualizarSalida(parseInt(n), 'BOMBA', hayRiegoActivo ? 'activo' : 'inactivo');
       }
     }
+  }
   }
 
   function actualizarRotacionWeb() {
