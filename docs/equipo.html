@@ -284,6 +284,16 @@
     cursor: pointer;
   }
   .btn-detener-todo.activo { background: #E24C4C; }
+
+  .fila-historial {
+    border-bottom: 1px solid var(--gris);
+    padding: 8px 0;
+    font-size: 12px;
+  }
+  .fila-historial:last-child { border-bottom: none; }
+  .fila-historial .linea1 { font-weight: 600; color: var(--texto); }
+  .fila-historial .linea2 { color: var(--texto-tenue); margin-top: 2px; }
+  .fila-historial.con-falla .linea1 { color: #E24C4C; }
 </style>
 </head>
 <body>
@@ -349,6 +359,25 @@
       <div id="diasSemana" style="display:flex; gap:6px; margin-bottom:14px;"></div>
 
       <div id="filasSectoresPrograma"></div>
+    </div>
+  </div>
+  <div class="seccion-programas" id="seccionAlertas">
+    <div class="cabecera" id="cabeceraAlertas">
+      <h2>Alertas (últimas 50)</h2>
+      <span class="flecha">▾</span>
+    </div>
+    <div class="cuerpo">
+      <div id="listaAlertas"><p class="mensaje-cargando">Despliega para cargar…</p></div>
+    </div>
+  </div>
+
+  <div class="seccion-programas" id="seccionHistorial">
+    <div class="cabecera" id="cabeceraHistorial">
+      <h2>Últimos Riegos (últimos 50)</h2>
+      <span class="flecha">▾</span>
+    </div>
+    <div class="cuerpo">
+      <div id="listaHistorial"><p class="mensaje-cargando">Despliega para cargar…</p></div>
     </div>
   </div>
 </main>
@@ -447,6 +476,7 @@
     construirFilasSectoresPrograma();
     inicializarSeccionProgramas();
     inicializarControlesEstado();
+    inicializarSeccionesHistorial();
     conectarMQTT(unidad, deviceId);
   }
 
@@ -808,6 +838,149 @@
     });
   }
 
+  // ============================================================
+  // Historial: Alertas y Últimos Riegos (últimas 50, buffer circular
+  // en el equipo). Se cargan solo al desplegar la tarjeta (no en cada
+  // carga de página) para no saturar de mensajes MQTT innecesarios.
+  // ============================================================
+  let alertasData = {};       // idx -> {timestamp, programa, sector, mensaje}
+  let alertasCountEsperado = null;
+  let registrosData = {};     // idx -> {timestamp, programa, sector, litrosAgua, litrosFert, conFalla, duracionSeg}
+  let registrosCountEsperado = null;
+
+  function formatoFechaHora(timestampSeg) {
+    if (!timestampSeg) return 'Fecha desconocida';
+    return new Date(timestampSeg * 1000).toLocaleString('es-CL');
+  }
+
+  function inicializarSeccionesHistorial() {
+    const cabeceraAlertas = document.getElementById('cabeceraAlertas');
+    const seccionAlertas = document.getElementById('seccionAlertas');
+    cabeceraAlertas.addEventListener('click', () => {
+      const yaAbierta = seccionAlertas.classList.contains('abierta');
+      seccionAlertas.classList.toggle('abierta');
+      if (!yaAbierta) cargarAlertas();
+    });
+
+    const cabeceraHistorial = document.getElementById('cabeceraHistorial');
+    const seccionHistorial = document.getElementById('seccionHistorial');
+    cabeceraHistorial.addEventListener('click', () => {
+      const yaAbierta = seccionHistorial.classList.contains('abierta');
+      seccionHistorial.classList.toggle('abierta');
+      if (!yaAbierta) cargarHistorial();
+    });
+  }
+
+  function cargarAlertas() {
+    if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
+    alertasData = {};
+    alertasCountEsperado = null;
+    document.getElementById('listaAlertas').innerHTML = '<p class="mensaje-cargando">Cargando…</p>';
+    publicarComandoOperador('GETALERTASCOUNT');
+  }
+
+  function cargarHistorial() {
+    if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
+    registrosData = {};
+    registrosCountEsperado = null;
+    document.getElementById('listaHistorial').innerHTML = '<p class="mensaje-cargando">Cargando…</p>';
+    publicarComandoOperador('GETREGISTROSCOUNT');
+  }
+
+  function procesarRespuestaAlerta(msg) {
+    if (msg.startsWith('ALERTCOUNT:')) {
+      const count = parseInt(msg.split(':')[1], 10);
+      alertasCountEsperado = count;
+      if (count === 0) {
+        document.getElementById('listaAlertas').innerHTML = '<p class="mensaje-cargando">Sin alertas registradas.</p>';
+        return;
+      }
+      for (let i = 0; i < count; i++) publicarComandoOperador(`GETALERTAS:${i}`);
+      return;
+    }
+    if (msg.startsWith('ALERT:')) {
+      const p = msg.split(':');
+      const idx = parseInt(p[1], 10);
+      // ALERT:n:timestamp:programa:sector:mensaje -- el mensaje se
+      // reconstruye desde el índice 5 por si contuviera ":" (no debería,
+      // pero por seguridad no se corta ahí).
+      const mensaje = p.slice(5).join(':');
+      alertasData[idx] = {
+        timestamp: parseInt(p[2], 10),
+        programa: parseInt(p[3], 10),
+        sector: parseInt(p[4], 10),
+        mensaje: mensaje
+      };
+      renderAlertas();
+    }
+  }
+
+  function procesarRespuestaHistorial(msg) {
+    if (msg.startsWith('REGCOUNT:')) {
+      const count = parseInt(msg.split(':')[1], 10);
+      registrosCountEsperado = count;
+      if (count === 0) {
+        document.getElementById('listaHistorial').innerHTML = '<p class="mensaje-cargando">Sin riegos registrados.</p>';
+        return;
+      }
+      for (let i = 0; i < count; i++) publicarComandoOperador(`GETREGISTROS:${i}`);
+      return;
+    }
+    if (msg.startsWith('REG:')) {
+      const p = msg.split(':');
+      const idx = parseInt(p[1], 10);
+      registrosData[idx] = {
+        timestamp: parseInt(p[2], 10),
+        programa: parseInt(p[3], 10),
+        sector: parseInt(p[4], 10),
+        litrosAgua: parseFloat(p[5]),
+        litrosFert: parseFloat(p[6]),
+        conFalla: p[7] === '1',
+        duracionSeg: parseInt(p[8], 10)
+      };
+      renderHistorial();
+    }
+  }
+
+  function renderAlertas() {
+    if (alertasCountEsperado === null) return;
+    const idxs = Object.keys(alertasData).map(Number);
+    if (idxs.length < alertasCountEsperado) return;  // esperar a que lleguen todas
+    // Más reciente primero (los índices guardados vienen del más antiguo
+    // al más nuevo, así que se recorren al revés)
+    idxs.sort((a, b) => b - a);
+    const html = idxs.map(i => {
+      const a = alertasData[i];
+      const nombreProg = NOMBRES_PROGRAMA_WEB[a.programa] || `Prog ${a.programa}`;
+      return `
+        <div class="fila-historial con-falla">
+          <div class="linea1">${a.mensaje}</div>
+          <div class="linea2">${nombreProg} — Sector ${a.sector + 1} · ${formatoFechaHora(a.timestamp)}</div>
+        </div>`;
+    }).join('');
+    document.getElementById('listaAlertas').innerHTML = html;
+  }
+
+  function renderHistorial() {
+    if (registrosCountEsperado === null) return;
+    const idxs = Object.keys(registrosData).map(Number);
+    if (idxs.length < registrosCountEsperado) return;
+    idxs.sort((a, b) => b - a);
+    const html = idxs.map(i => {
+      const r = registrosData[i];
+      const nombreProg = NOMBRES_PROGRAMA_WEB[r.programa] || `Prog ${r.programa}`;
+      const dur = formatoMinSeg(r.duracionSeg);
+      const claseFalla = r.conFalla ? 'con-falla' : '';
+      const etiquetaFalla = r.conFalla ? ' (con falla)' : '';
+      return `
+        <div class="fila-historial ${claseFalla}">
+          <div class="linea1">${nombreProg} — Sector ${r.sector + 1}${etiquetaFalla}</div>
+          <div class="linea2">${formatoFechaHora(r.timestamp)} · ${dur} · ${r.litrosAgua.toFixed(2)} L agua${r.litrosFert > 0 ? ` · ${r.litrosFert.toFixed(2)} L fert` : ''}</div>
+        </div>`;
+    }).join('');
+    document.getElementById('listaHistorial').innerHTML = html;
+  }
+
   function conectarMQTT(unidad, deviceId) {
     const client = mqtt.connect('wss://e0b71edcce184b74a7a5a87fc9d2b605.s1.eu.hivemq.cloud:8884/mqtt', {
       username: 'pluo_web_client',
@@ -854,6 +1027,14 @@
       }
       if (texto.startsWith('EST:')) {
         procesarRespuestaEstado(texto);
+        return;
+      }
+      if (texto.startsWith('ALERTCOUNT:') || texto.startsWith('ALERT:')) {
+        procesarRespuestaAlerta(texto);
+        return;
+      }
+      if (texto.startsWith('REGCOUNT:') || texto.startsWith('REG:')) {
+        procesarRespuestaHistorial(texto);
         return;
       }
 
