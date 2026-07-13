@@ -657,7 +657,7 @@
           <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
             <input type="checkbox" id="sec-fert-activa-${s}" onchange="window.toggleFertSector(${s})"> Fertilización
           </label>
-          <select class="campo" id="sec-fert-tipo-${s}">
+          <select class="campo" id="sec-fert-tipo-${s}" style="display:none;">
             <option value="1">Directo (litros objetivo)</option>
             <option value="2">Fraccionado (pulsos adaptativos)</option>
           </select>
@@ -679,7 +679,9 @@
   window.toggleFertSector = function (s) {
     const activa = document.getElementById(`sec-fert-activa-${s}`).checked;
     const campos = document.getElementById(`sec-fert-campos-${s}`);
+    const tipoSelect = document.getElementById(`sec-fert-tipo-${s}`);
     if (campos) campos.style.display = activa ? 'grid' : 'none';
+    if (tipoSelect) tipoSelect.style.display = activa ? 'block' : 'none';
   };
 
   function cargarPrograma() {
