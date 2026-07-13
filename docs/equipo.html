@@ -610,7 +610,7 @@
   function sectoresAuxDisponibles() {
     const set = new Set();
     for (const n in salidasInfo) {
-      if (salidasInfo[n].tipo === 'AUX' && salidasInfo[n].sectorAsoc >= 1) set.add(salidasInfo[n].sectorAsoc - 1);
+      if (salidasInfo[n].tipo === 'AUX') set.add(salidasInfo[n].sectorAsoc);
     }
     return [...set].sort((a, b) => a - b);
   }
@@ -618,7 +618,7 @@
   function sectoresRiegoDisponibles() {
     const set = new Set();
     for (const n in salidasInfo) {
-      if (salidasInfo[n].tipo === 'RIEGO' && salidasInfo[n].sectorAsoc >= 1) set.add(salidasInfo[n].sectorAsoc - 1);
+      if (salidasInfo[n].tipo === 'RIEGO') set.add(salidasInfo[n].sectorAsoc);
     }
     return [...set].sort((a, b) => a - b);
   }
@@ -647,7 +647,7 @@
       div.innerHTML = `
         <div class="fila-triple" style="margin-bottom:${esAux ? '0' : '8px'};">
           <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-            <input type="checkbox" id="sec-hab-${s}"> ${esAux ? (salidasInfo[Object.keys(salidasInfo).find(n => salidasInfo[n].tipo === 'AUX' && salidasInfo[n].sectorAsoc - 1 === s)]?.nombre || `Salida (sector ${s + 1})`) : `Sector ${s + 1}`}
+            <input type="checkbox" id="sec-hab-${s}"> ${esAux ? (salidasInfo[Object.keys(salidasInfo).find(n => salidasInfo[n].tipo === 'AUX' && salidasInfo[n].sectorAsoc === s)]?.nombre || `Salida (sector ${s})`) : `Sector ${s}`}
           </label>
           <input class="campo" type="number" id="sec-hh-${s}" placeholder="hh" min="0" max="23">
           <input class="campo" type="number" id="sec-mm-${s}" placeholder="mm" min="0" max="59">
@@ -668,7 +668,7 @@
           <input class="campo" type="number" id="sec-fert-despues-${s}" placeholder="Agua después (min)">
         </div>`}
         <button class="btn-secundario" style="width:100%; margin-top:4px;" data-sector="${s}">
-          Guardar ${esAux ? 'salida' : 'sector'} ${s + 1}
+          Guardar ${esAux ? 'salida' : 'sector'} ${s}
         </button>
       `;
       div.querySelector('button[data-sector]').addEventListener('click', () => guardarSector(s));
@@ -724,7 +724,7 @@
       const despues = document.getElementById(`sec-fert-despues-${s}`).value || '0';
       publicarComandoOperador(`SETFERT:${idx}:${s}:${fertActiva}:${fertTipo}:${litros}:${antes}:${despues}`);
     }
-    mostrarToast(`Sector ${s + 1} guardado.`);
+    mostrarToast(`Sector ${s} guardado.`);
   }
 
   // Parser de respuestas PROG:/SEC: para precargar la UI tras GETPROG/GETSECTOR
