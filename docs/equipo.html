@@ -313,6 +313,9 @@
   </div>
 
   <div class="tarjeta-estado">
+    <div class="fila-estado" style="border-bottom:1px solid var(--gris); padding-bottom:10px; margin-bottom:6px;">
+      <span>Hora del equipo</span><span id="horaEquipoTexto">--:--:--</span>
+    </div>
     <h2 id="tarjetaEstadoTitulo">Riego</h2>
     <div class="fila-estado"><span>Estado</span><span id="tarjetaEstadoEstado">--</span></div>
     <div class="fila-estado"><span>Sector activo</span><span id="tarjetaEstadoSector">--</span></div>
@@ -981,6 +984,26 @@
     document.getElementById('listaHistorial').innerHTML = html;
   }
 
+  function procesarRespuestaHora(msg) {
+    // HORA:dd:mm:aaaa:hh:mm:ss
+    const p = msg.split(':');
+    const dia = parseInt(p[1], 10), mes = parseInt(p[2], 10), anio = parseInt(p[3], 10);
+    const hh = parseInt(p[4], 10), mm = parseInt(p[5], 10), ss = parseInt(p[6], 10);
+
+    const horaEquipo = new Date(anio, mes - 1, dia, hh, mm, ss);
+    const horaTexto = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+
+    const diffSeg = Math.round((Date.now() - horaEquipo.getTime()) / 1000);
+    const el = document.getElementById('horaEquipoTexto');
+    if (Math.abs(diffSeg) > 60) {
+      el.textContent = `${horaTexto} ⚠️ desfasada ${diffSeg > 0 ? diffSeg : -diffSeg}s vs tu navegador`;
+      el.style.color = '#E24C4C';
+    } else {
+      el.textContent = `${horaTexto} (sincronizada)`;
+      el.style.color = '';
+    }
+  }
+
   function conectarMQTT(unidad, deviceId) {
     const client = mqtt.connect('wss://e0b71edcce184b74a7a5a87fc9d2b605.s1.eu.hivemq.cloud:8884/mqtt', {
       username: 'pluo_web_client',
@@ -1013,6 +1036,7 @@
         for (let i = 0; i < 3; i++) {
           client.publish(`pluo/${deviceId}/cmd`, `${tokenOperador || unidad.token_observador}:GETESTADO:${i}`);
         }
+        client.publish(`pluo/${deviceId}/cmd`, `${unidad.token_observador}:GETHORA`);
       };
       pedirEstados();
       setInterval(pedirEstados, 2000);
@@ -1035,6 +1059,10 @@
       }
       if (texto.startsWith('REGCOUNT:') || texto.startsWith('REG:')) {
         procesarRespuestaHistorial(texto);
+        return;
+      }
+      if (texto.startsWith('HORA:')) {
+        procesarRespuestaHora(texto);
         return;
       }
 
