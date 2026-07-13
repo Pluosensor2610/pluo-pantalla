@@ -833,7 +833,11 @@
         const est = estadosPrograma[i];
         if (!est || !est.ejecutando) continue;
         if (i < 5) {
-          if (info.tipo === 'RIEGO' && info.sectorAsoc === est.sector + 1) { activo = true; break; }
+        if (info.tipo === 'RIEGO' && info.sectorAsoc === est.sector + 1) {
+          actualizarSalida(parseInt(n), info.tipo, est.pausado ? 'alerta' : 'activo');
+          activo = false; // ya fue manejado
+          break;
+        }
           if (info.tipo === 'BOMBA_INY' && est.estadoInterno >= 2) { activo = true; break; }
           if (info.tipo === 'VALV_INY' && est.estadoInterno >= 2) { activo = true; break; }
         } else {
@@ -880,8 +884,14 @@
       document.getElementById('tarjetaEstadoTranscurrido').textContent = '--';
       document.getElementById('tarjetaEstadoRestante').textContent = '--';
     } else {
-      document.getElementById('tarjetaEstadoEstado').textContent =
-        nombreEtapaWeb(est.estadoInterno, est.ejecutando, est.pausado);
+      const estadoEl = document.getElementById('tarjetaEstadoEstado');
+      const etapa = nombreEtapaWeb(est.estadoInterno, est.ejecutando, est.pausado);
+      estadoEl.textContent = etapa;
+      if (est.pausado) {
+        estadoEl.style.cssText = 'background:#E24C4C; color:white; padding:2px 8px; border-radius:4px; font-weight:700;';
+      } else {
+        estadoEl.style.cssText = '';
+      }
       document.getElementById('tarjetaEstadoSector').textContent = est.ejecutando ? (() => { const k = Object.keys(salidasInfo).find(n => salidasInfo[n].sectorAsoc === est.sector + 1 && salidasInfo[n].tipo === 'RIEGO'); return k ? salidasInfo[k].nombre : (est.sector + 1); })() : '--';
       document.getElementById('tarjetaEstadoTranscurrido').textContent =
         est.ejecutando ? formatoMinSeg(est.transcurridoSeg) : '--';
