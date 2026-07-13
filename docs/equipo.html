@@ -224,6 +224,55 @@
     z-index: 100;
   }
   .toast-guardado.visible { opacity: 1; }
+
+  /* --- Tarjeta de Estado (rotativa: Riego/Aux1/Aux2) --- */
+  .tarjeta-estado {
+    background: var(--blanco);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .tarjeta-estado h2 {
+    font-size: 15px;
+    margin: 0 0 12px 0;
+    color: var(--texto);
+  }
+  .tarjeta-estado .fila-estado {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+  }
+  .tarjeta-estado .fila-estado span:first-child { color: var(--texto-tenue); }
+  .tarjeta-estado .fila-estado span:last-child { color: var(--texto); font-weight: 600; }
+  .tarjeta-estado .botones-control {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .btn-pausa {
+    background: var(--azul);
+    color: var(--blanco);
+    border: none;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-pausa.en-pausa { background: #E24C4C; }
+  .btn-saltar {
+    background: var(--azul);
+    color: var(--blanco);
+    border: none;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -240,6 +289,19 @@
 <main>
   <div class="grid-sectores" id="gridSalidas">
     <p class="mensaje-cargando">Cargando salidas…</p>
+  </div>
+
+  <div class="tarjeta-estado">
+    <h2 id="tarjetaEstadoTitulo">Riego</h2>
+    <div class="fila-estado"><span>Estado</span><span id="tarjetaEstadoEstado">--</span></div>
+    <div class="fila-estado"><span>Sector activo</span><span id="tarjetaEstadoSector">--</span></div>
+    <div class="fila-estado"><span>Tiempo transcurrido</span><span id="tarjetaEstadoTranscurrido">--</span></div>
+    <div class="fila-estado"><span>Tiempo restante</span><span id="tarjetaEstadoRestante">--</span></div>
+    <div class="fila-estado" id="filaCaudalWeb"><span>Caudal regado</span><span id="tarjetaEstadoCaudal">--</span></div>
+    <div class="botones-control">
+      <button class="btn-pausa" id="btnPausarWeb">Pausar Riego</button>
+      <button class="btn-saltar" id="btnSaltarWeb">Saltar sector (Riego)</button>
+    </div>
   </div>
 
   <div class="seccion-programas" id="seccionProgramas">
@@ -372,6 +434,7 @@
     construirDiasSemana();
     construirFilasSectoresPrograma();
     inicializarSeccionProgramas();
+    inicializarControlesEstado();
     conectarMQTT(unidad, deviceId);
   }
 
@@ -606,6 +669,125 @@
     }
   }
 
+  // ============================================================
+  // Tarjeta de Estado (rotativa) -- misma lógica que la pantalla física:
+  // rota cada 10s entre los programas que estén realmente ejecutando
+  // (Riego/Aux1/Aux2). Pausa y Saltar solo controlan Riego (idx 0).
+  // ============================================================
+  const NOMBRES_PROGRAMA_WEB = ['Riego', 'Aux 1', 'Aux 2'];
+  const ROTACION_WEB_MS = 10000;
+  let estadosPrograma = {};   // {0:{...}, 1:{...}, 2:{...}} -- último EST: recibido de cada uno
+  let idxMostradoWeb = 0;
+  let tUltimaRotacionWeb = 0;
+
+  function nombreEtapaWeb(estadoInterno, ejecutando, pausado) {
+    if (!ejecutando) return 'Inactivo';
+    if (pausado) return 'Pausado';
+    switch (estadoInterno) {
+      case 1: return 'Regando';
+      case 2: return 'Fertilizando';
+      case 3: return 'Fertilizando';
+      case 4: return 'Regando (post-fert)';
+      default: return 'Inactivo';
+    }
+  }
+
+  function formatoMinSeg(totalSeg) {
+    if (totalSeg < 0) return '--';
+    const m = Math.floor(totalSeg / 60);
+    const s = totalSeg % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  function procesarRespuestaEstado(msg) {
+    // EST:idx:ejecutando:programa:sector:estado_interno:litros_agua:litros_fert:falla_fert:pausado:transcurrido_seg:restante_seg:alerta
+    const p = msg.split(':');
+    const idx = parseInt(p[1], 10);
+    estadosPrograma[idx] = {
+      ejecutando: p[2] === '1',
+      sector: parseInt(p[4], 10),
+      estadoInterno: parseInt(p[5], 10),
+      litrosAgua: parseFloat(p[6]),
+      fallaFert: p[8] === '1',
+      pausado: p[9] === '1',
+      transcurridoSeg: parseInt(p[10], 10),
+      restanteSeg: parseInt(p[11], 10)
+    };
+    actualizarRotacionWeb();
+    renderTarjetaEstadoWeb();
+  }
+
+  function actualizarRotacionWeb() {
+    const activos = [];
+    for (let i = 0; i < 3; i++) {
+      if (estadosPrograma[i] && estadosPrograma[i].ejecutando) activos.push(i);
+    }
+    if (activos.length === 0) { idxMostradoWeb = 0; return; }
+    if (!activos.includes(idxMostradoWeb)) {
+      idxMostradoWeb = activos[0];
+      tUltimaRotacionWeb = Date.now();
+      return;
+    }
+    if (activos.length > 1 && (Date.now() - tUltimaRotacionWeb >= ROTACION_WEB_MS)) {
+      tUltimaRotacionWeb = Date.now();
+      const pos = activos.indexOf(idxMostradoWeb);
+      idxMostradoWeb = activos[(pos + 1) % activos.length];
+    }
+  }
+
+  function renderTarjetaEstadoWeb() {
+    const est = estadosPrograma[idxMostradoWeb];
+    document.getElementById('tarjetaEstadoTitulo').textContent = NOMBRES_PROGRAMA_WEB[idxMostradoWeb];
+
+    if (!est) {
+      document.getElementById('tarjetaEstadoEstado').textContent = '--';
+      document.getElementById('tarjetaEstadoSector').textContent = '--';
+      document.getElementById('tarjetaEstadoTranscurrido').textContent = '--';
+      document.getElementById('tarjetaEstadoRestante').textContent = '--';
+    } else {
+      document.getElementById('tarjetaEstadoEstado').textContent =
+        nombreEtapaWeb(est.estadoInterno, est.ejecutando, est.pausado);
+      document.getElementById('tarjetaEstadoSector').textContent = est.ejecutando ? (est.sector + 1) : '--';
+      document.getElementById('tarjetaEstadoTranscurrido').textContent =
+        est.ejecutando ? formatoMinSeg(est.transcurridoSeg) : '--';
+      document.getElementById('tarjetaEstadoRestante').textContent =
+        est.ejecutando ? formatoMinSeg(est.restanteSeg) : '--';
+    }
+
+    const filaCaudal = document.getElementById('filaCaudalWeb');
+    if (idxMostradoWeb === 0) {
+      filaCaudal.style.display = 'flex';
+      document.getElementById('tarjetaEstadoCaudal').textContent =
+        est ? `${est.litrosAgua.toFixed(2)} L` : '--';
+    } else {
+      filaCaudal.style.display = 'none';
+    }
+
+    // Botón Pausar/Reanudar -- siempre refleja el estado de Riego (idx 0),
+    // sin importar cuál programa se esté mostrando en la tarjeta.
+    const riego = estadosPrograma[0];
+    const btnPausar = document.getElementById('btnPausarWeb');
+    if (riego && riego.pausado) {
+      btnPausar.textContent = 'Reanudar Riego';
+      btnPausar.classList.add('en-pausa');
+    } else {
+      btnPausar.textContent = 'Pausar Riego';
+      btnPausar.classList.remove('en-pausa');
+    }
+  }
+
+  function inicializarControlesEstado() {
+    document.getElementById('btnPausarWeb').addEventListener('click', () => {
+      if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
+      const riego = estadosPrograma[0];
+      publicarComandoOperador((riego && riego.pausado) ? 'REANUDAR' : 'PAUSAR');
+    });
+    document.getElementById('btnSaltarWeb').addEventListener('click', () => {
+      if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
+      publicarComandoOperador('SALTAR');
+    });
+  }
+
   function conectarMQTT(unidad, deviceId) {
     const client = mqtt.connect('wss://e0b71edcce184b74a7a5a87fc9d2b605.s1.eu.hivemq.cloud:8884/mqtt', {
       username: 'pluo_web_client',
@@ -631,6 +813,16 @@
           actualizarSalida(i, null, 'sin_datos');
         }, 4000);
       }
+
+      // Estado de los 3 programas -- se pide de entrada y se refresca
+      // cada 2s (no hay push desde el equipo, solo respuesta a consulta).
+      const pedirEstados = () => {
+        for (let i = 0; i < 3; i++) {
+          client.publish(`pluo/${deviceId}/cmd`, `${tokenOperador || unidad.token_observador}:GETESTADO:${i}`);
+        }
+      };
+      pedirEstados();
+      setInterval(pedirEstados, 2000);
     });
 
     client.on('message', (topic, mensaje) => {
@@ -638,6 +830,10 @@
 
       if (texto.startsWith('PROG:') || texto.startsWith('SEC:')) {
         procesarRespuestaPrograma(texto);
+        return;
+      }
+      if (texto.startsWith('EST:')) {
+        procesarRespuestaEstado(texto);
         return;
       }
 
