@@ -337,13 +337,20 @@
     <div class="cuerpo">
       <div class="fila-triple">
         <select class="campo" id="progSeleccionado">
-          <option value="0">Riego</option>
-          <option value="1">Aux 1</option>
-          <option value="2">Aux 2</option>
+          <option value="0">Riego 1</option>
+          <option value="1">Riego 2</option>
+          <option value="2">Riego 3</option>
+          <option value="3">Riego 4</option>
+          <option value="4">Riego 5</option>
+          <option value="5">Aux 1</option>
+          <option value="6">Aux 2</option>
         </select>
         <button class="btn-secundario" id="btnCargarPrograma">Cargar actual</button>
         <button class="btn-accion" id="btnGuardarPrograma">Guardar programa</button>
       </div>
+      <button class="btn-accion" id="btnIniciarAhora" style="width:100%; margin-bottom:14px; background:var(--verde, #2E9E5B);">
+        Iniciar ahora (sin esperar hora/día programado)
+      </button>
 
       <div class="fila-doble">
         <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
@@ -582,6 +589,12 @@
     document.getElementById('progSeleccionado').addEventListener('change', construirFilasSectoresPrograma);
     document.getElementById('btnCargarPrograma').addEventListener('click', cargarPrograma);
     document.getElementById('btnGuardarPrograma').addEventListener('click', guardarPrograma);
+    document.getElementById('btnIniciarAhora').addEventListener('click', () => {
+      if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
+      const idx = document.getElementById('progSeleccionado').value;
+      publicarComandoOperador(`INICIAR:${idx}`);
+      mostrarToast('Comando de inicio enviado.');
+    });
   }
 
   function construirDiasSemana() {
@@ -611,7 +624,7 @@
   }
 
   function construirFilasSectoresPrograma() {
-    const esAux = document.getElementById('progSeleccionado').value !== '0';
+    const esAux = parseInt(document.getElementById('progSeleccionado').value, 10) >= 5;
     const cont = document.getElementById('filasSectoresPrograma');
     cont.innerHTML = '';
 
@@ -683,7 +696,7 @@
     const idx = document.getElementById('progSeleccionado').value;
     const activo = document.getElementById('progActivo').checked ? 1 : 0;
     const loop = document.getElementById('progLoop').checked ? 1 : 0;
-    const esAux = idx !== '0' ? 1 : 0;
+    const esAux = parseInt(idx, 10) >= 5 ? 1 : 0;
     const hora = document.getElementById('progHora').value || '0';
     const min = document.getElementById('progMin').value || '0';
     const dias = DIAS.map((_, i) => document.getElementById(`dia-${i}`).checked ? 1 : 0).join(':');
@@ -699,8 +712,9 @@
     const mm = document.getElementById(`sec-mm-${s}`).value || '0';
     publicarComandoOperador(`SETSECTOR:${idx}:${s}:${hab}:${hh}:${mm}`);
 
-    // Solo el programa de riego (idx=0) tiene fertilización
-    if (idx === '0') {
+    // Fertilización aplica a cualquiera de los 5 programas de riego (idx 0-4),
+    // no solo al primero -- los auxiliares (idx 5-6) nunca la tienen.
+    if (parseInt(idx, 10) < 5) {
       const fertActiva = document.getElementById(`sec-fert-activa-${s}`).checked ? 1 : 0;
       const fertTipo = document.getElementById(`sec-fert-tipo-${s}`).value;
       const litros = document.getElementById(`sec-fert-litros-${s}`).value || '0';
@@ -752,11 +766,19 @@
   // rota cada 10s entre los programas que estén realmente ejecutando
   // (Riego/Aux1/Aux2). Pausa y Saltar solo controlan Riego (idx 0).
   // ============================================================
-  const NOMBRES_PROGRAMA_WEB = ['Riego', 'Aux 1', 'Aux 2'];
+  const NOMBRES_PROGRAMA_WEB = ['Riego 1', 'Riego 2', 'Riego 3', 'Riego 4', 'Riego 5', 'Aux 1', 'Aux 2'];
+  const NUM_PROGRAMAS_WEB = NOMBRES_PROGRAMA_WEB.length;
   const ROTACION_WEB_MS = 10000;
   let estadosPrograma = {};   // {0:{...}, 1:{...}, 2:{...}} -- último EST: recibido de cada uno
   let idxMostradoWeb = 0;
   let tUltimaRotacionWeb = 0;
+
+  function idxRiegoActivoWeb() {
+    for (let i = 0; i < 5; i++) {
+      if (estadosPrograma[i] && estadosPrograma[i].ejecutando) return i;
+    }
+    return -1;
+  }
 
   function nombreEtapaWeb(estadoInterno, ejecutando, pausado) {
     if (!ejecutando) return 'Inactivo';
@@ -797,7 +819,7 @@
 
   function actualizarRotacionWeb() {
     const activos = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < NUM_PROGRAMAS_WEB; i++) {
       if (estadosPrograma[i] && estadosPrograma[i].ejecutando) activos.push(i);
     }
     if (activos.length === 0) { idxMostradoWeb = 0; return; }
@@ -833,7 +855,7 @@
     }
 
     const filaCaudal = document.getElementById('filaCaudalWeb');
-    if (idxMostradoWeb === 0) {
+    if (idxMostradoWeb < 5) {
       filaCaudal.style.display = 'flex';
       document.getElementById('tarjetaEstadoCaudal').textContent =
         est ? `${est.litrosAgua.toFixed(2)} L` : '--';
@@ -841,9 +863,10 @@
       filaCaudal.style.display = 'none';
     }
 
-    // Botón Pausar/Reanudar -- siempre refleja el estado de Riego (idx 0),
-    // sin importar cuál programa se esté mostrando en la tarjeta.
-    const riego = estadosPrograma[0];
+    // Botón Pausar/Reanudar -- refleja el programa de riego que esté
+    // realmente corriendo (cualquiera de los 5), no uno fijo.
+    const idxRiegoActivo = idxRiegoActivoWeb();
+    const riego = idxRiegoActivo >= 0 ? estadosPrograma[idxRiegoActivo] : null;
     const btnPausar = document.getElementById('btnPausarWeb');
     if (riego && riego.pausado) {
       btnPausar.textContent = 'Reanudar Riego';
@@ -854,14 +877,16 @@
     }
 
     // Botón Detener todo -- rojo si Riego, Aux1 o Aux2 está corriendo
-    const algunoCorriendo = [0, 1, 2].some(i => estadosPrograma[i] && estadosPrograma[i].ejecutando);
+    const algunoCorriendo = Array.from({length: NUM_PROGRAMAS_WEB}, (_, i) => i)
+      .some(i => estadosPrograma[i] && estadosPrograma[i].ejecutando);
     document.getElementById('btnDetenerTodoWeb').classList.toggle('activo', algunoCorriendo);
   }
 
   function inicializarControlesEstado() {
     document.getElementById('btnPausarWeb').addEventListener('click', () => {
       if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
-      const riego = estadosPrograma[0];
+      const idxRiegoActivo = idxRiegoActivoWeb();
+      const riego = idxRiegoActivo >= 0 ? estadosPrograma[idxRiegoActivo] : null;
       publicarComandoOperador((riego && riego.pausado) ? 'REANUDAR' : 'PAUSAR');
     });
     document.getElementById('btnSaltarWeb').addEventListener('click', () => {
@@ -1063,10 +1088,10 @@
         }, 4000);
       }
 
-      // Estado de los 3 programas -- se pide de entrada y se refresca
+      // Estado de los 7 programas -- se pide de entrada y se refresca
       // cada 2s (no hay push desde el equipo, solo respuesta a consulta).
       const pedirEstados = () => {
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < NUM_PROGRAMAS_WEB; i++) {
           client.publish(`pluo/${deviceId}/cmd`, `${tokenOperador || unidad.token_observador}:GETESTADO:${i}`);
         }
         client.publish(`pluo/${deviceId}/cmd`, `${unidad.token_observador}:GETHORA`);
