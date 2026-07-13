@@ -563,6 +563,7 @@
 
   let tokenOperador = null;
   let publicarComandoOperador = null;
+  let salidasInfo = {};  // n -> {tipo, sectorAsoc} -- para filtrar sectores en Aux1/Aux2
 
   function mostrarToast(msg) {
     const toast = document.getElementById('toastGuardado');
@@ -593,17 +594,37 @@
     `).join('');
   }
 
+  function sectoresAuxDisponibles() {
+    const set = new Set();
+    for (const n in salidasInfo) {
+      if (salidasInfo[n].tipo === 'AUX') set.add(salidasInfo[n].sectorAsoc);
+    }
+    return [...set].sort((a, b) => a - b);
+  }
+
   function construirFilasSectoresPrograma() {
     const esAux = document.getElementById('progSeleccionado').value !== '0';
     const cont = document.getElementById('filasSectoresPrograma');
     cont.innerHTML = '';
-    for (let s = 0; s < MAX_SECTORES; s++) {
+
+    // En Aux1/Aux2 solo tiene sentido mostrar sectores que tengan una
+    // salida tipo AUX asociada -- no salidas de riego/bomba, que las
+    // controla exclusivamente el programa Riego.
+    const sectoresAMostrar = esAux ? sectoresAuxDisponibles()
+                                    : Array.from({length: MAX_SECTORES}, (_, i) => i);
+
+    if (esAux && sectoresAMostrar.length === 0) {
+      cont.innerHTML = '<p class="mensaje-cargando">No hay salidas tipo AUX configuradas. Configúralas en la sección de Salidas.</p>';
+      return;
+    }
+
+    for (const s of sectoresAMostrar) {
       const div = document.createElement('div');
       div.className = 'tarjeta-sector-prog';
       div.innerHTML = `
         <div class="fila-triple" style="margin-bottom:${esAux ? '0' : '8px'};">
           <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-            <input type="checkbox" id="sec-hab-${s}"> Sector ${s + 1}
+            <input type="checkbox" id="sec-hab-${s}"> ${esAux ? (salidasInfo[Object.keys(salidasInfo).find(n => salidasInfo[n].tipo === 'AUX' && salidasInfo[n].sectorAsoc === s)]?.nombre || `Salida (sector ${s + 1})`) : `Sector ${s + 1}`}
           </label>
           <input class="campo" type="number" id="sec-hh-${s}" placeholder="hh" min="0" max="23">
           <input class="campo" type="number" id="sec-mm-${s}" placeholder="mm" min="0" max="59">
@@ -624,7 +645,7 @@
           <input class="campo" type="number" id="sec-fert-despues-${s}" placeholder="Agua después (min)">
         </div>`}
         <button class="btn-secundario" style="width:100%; margin-top:4px;" data-sector="${s}">
-          Guardar sector ${s + 1}
+          Guardar ${esAux ? 'salida' : 'sector'} ${s + 1}
         </button>
       `;
       div.querySelector('button[data-sector]').addEventListener('click', () => guardarSector(s));
@@ -699,7 +720,9 @@
       const idxSel = document.getElementById('progSeleccionado').value;
       if (p[1] !== idxSel) return;
       const s = parseInt(p[2], 10);
-      document.getElementById(`sec-hab-${s}`).checked = p[3] === '1';
+      const habEl = document.getElementById(`sec-hab-${s}`);
+      if (!habEl) return;  // sector no renderizado (filtrado en Aux1/Aux2)
+      habEl.checked = p[3] === '1';
       document.getElementById(`sec-hh-${s}`).value = p[4];
       document.getElementById(`sec-mm-${s}`).value = p[5];
       const fertActiva = document.getElementById(`sec-fert-activa-${s}`);
@@ -1071,8 +1094,16 @@
         const partes = texto.split(':');
         const n = parseInt(partes[1], 10);
         const tipo = partes[2];
+        const sectorAsoc = parseInt(partes[3], 10);
         const nombreSalida = partes[4];
         const estadoOnOff = partes[6];
+
+        salidasInfo[n] = { tipo, sectorAsoc };
+        // Si se está viendo un programa auxiliar, refrescar la lista de
+        // sectores por si esta salida cambia qué sectores AUX existen.
+        if (document.getElementById('progSeleccionado').value !== '0') {
+          construirFilasSectoresPrograma();
+        }
 
         clearTimeout(timeouts[n]);
 
