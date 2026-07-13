@@ -3,304 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pluo — Equipo</title>
+<title>Pluo Admin — Equipo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --azul: #1976D2;
-    --texto: #1A2B33;
-    --texto-tenue: #6B7C85;
-    --blanco: #FFFFFF;
-    --fondo: #F4F7F9;
-    --gris: #B9C2C6;
+    --fondo: #16181C;
+    --superficie: #1F2227;
+    --superficie2: #262A30;
+    --borde: rgba(226, 76, 76, 0.25);
     --rojo: #E24C4C;
+    --verde: #2FB65A;
+    --texto: #F0F0F0;
+    --texto-tenue: #8A8F98;
   }
-
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
   body {
-    margin: 0;
-    min-height: 100vh;
-    background: var(--fondo);
-    font-family: 'Manrope', sans-serif;
-    color: var(--texto);
+    margin: 0; min-height: 100vh; background: var(--fondo);
+    font-family: 'Manrope', sans-serif; color: var(--texto);
   }
-
   header {
-    background: var(--azul);
-    color: var(--blanco);
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    background: var(--superficie); border-bottom: 1px solid var(--borde);
+    padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 10;
   }
-
   #btnVolver {
-    background: rgba(255,255,255,0.15);
-    border: none;
-    color: var(--blanco);
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    font-size: 18px;
-    cursor: pointer;
-    flex-shrink: 0;
+    background: rgba(255,255,255,0.08); border: none; color: var(--texto);
+    width: 34px; height: 34px; border-radius: 8px; font-size: 18px; cursor: pointer;
+  }
+  header h1 { font-size: 16px; margin: 0; flex: 1; }
+  header p { font-size: 11px; margin: 0; color: var(--texto-tenue); font-family: 'IBM Plex Mono', monospace; }
+  .punto-conexion { width: 10px; height: 10px; border-radius: 50%; background: var(--texto-tenue); }
+  .punto-conexion.conectado { background: var(--verde); }
+
+  main { max-width: 560px; margin: 0 auto; padding: 16px; }
+
+  .seccion {
+    background: var(--superficie); border: 1px solid var(--borde);
+    border-radius: 12px; padding: 16px; margin-bottom: 14px;
+  }
+  .seccion h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--texto-tenue); margin: 0 0 12px 0;
   }
 
-  header .titulos { flex: 1; min-width: 0; }
-  header h1 {
-    font-size: 16px;
-    margin: 0;
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  header p {
-    font-size: 11px;
-    margin: 0;
-    opacity: 0.85;
-    font-family: 'IBM Plex Mono', monospace;
-  }
-
-  .punto-conexion {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--gris);
-    flex-shrink: 0;
-  }
-  .punto-conexion.conectado { background: #2FB65A; }
-
-  main {
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 16px;
-  }
-
-  .grid-sectores {
+  .fila-salida {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
-
-  .tarjeta-sector {
-    background: var(--blanco);
-    border-radius: 12px;
-    padding: 12px 6px;
-    text-align: center;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-  }
-
-  .tarjeta-sector .nombre {
-    font-size: 11px;
-    font-weight: 700;
+    grid-template-columns: 30px 1fr 1fr 1fr 70px;
+    gap: 6px;
     margin-bottom: 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .circulo-icono {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--gris);
-    margin: 0 auto 8px auto;
-    display: flex;
     align-items: center;
-    justify-content: center;
-    transition: background 0.2s ease;
+  }
+  .fila-salida .n { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--texto-tenue); }
+
+  select, input {
+    background: var(--superficie2); border: 1px solid var(--borde);
+    border-radius: 6px; color: var(--texto); padding: 7px 8px; font-size: 12px;
+    font-family: 'Manrope', sans-serif; width: 100%;
   }
 
-  .circulo-icono svg { width: 37px; height: 37px; }
+  .fila-doble { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .fila-triple { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
 
-  .tarjeta-sector .estado-texto {
-    font-size: 10px;
-    color: var(--texto-tenue);
+  button.accion {
+    background: var(--rojo); color: #16181C; border: none; border-radius: 6px;
+    padding: 7px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
   }
+  button.accion:active { opacity: 0.8; }
+  button.secundaria {
+    background: transparent; color: var(--texto); border: 1px solid var(--borde);
+  }
+  button.peligro { background: var(--rojo); color: white; width: 100%; padding: 12px; font-size: 14px; margin-bottom: 8px; }
+  button.exito { background: var(--verde); color: #16181C; width: 100%; padding: 12px; font-size: 14px; }
 
-  .mensaje-cargando {
-    text-align: center;
-    color: var(--texto-tenue);
-    padding: 60px 20px;
-    font-size: 14px;
-    grid-column: 1 / -1;
+  .log {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--texto-tenue);
+    margin-top: 8px; white-space: pre-wrap; max-height: 100px; overflow-y: auto;
   }
-
-  /* --- Sección Programas (desplegable) --- */
-  .seccion-programas {
-    background: var(--blanco);
-    border-radius: 12px;
-    margin-top: 16px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-    overflow: hidden;
-  }
-  .seccion-programas .cabecera {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 16px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .seccion-programas .cabecera h2 {
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--texto-tenue);
-    margin: 0;
-  }
-  .seccion-programas .flecha {
-    transition: transform 0.2s ease;
-    color: var(--texto-tenue);
-    font-size: 14px;
-  }
-  .seccion-programas.abierta .flecha { transform: rotate(180deg); }
-  .seccion-programas .cuerpo {
-    display: none;
-    padding: 0 16px 16px 16px;
-  }
-  .seccion-programas.abierta .cuerpo { display: block; }
-
-  select.campo, input.campo {
-    background: var(--fondo);
-    border: 1px solid var(--gris);
-    border-radius: 6px;
-    color: var(--texto);
-    padding: 8px;
-    font-size: 12px;
-    font-family: 'Manrope', sans-serif;
-    width: 100%;
-  }
-  .fila-doble { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-  .fila-triple { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-
-  button.btn-accion {
-    background: var(--azul);
-    color: var(--blanco);
-    border: none;
-    border-radius: 6px;
-    padding: 8px 10px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  button.btn-accion:active { opacity: 0.8; }
-  button.btn-secundario {
-    background: transparent;
-    color: var(--texto);
-    border: 1px solid var(--gris);
-    border-radius: 6px;
-    padding: 8px 10px;
-    font-size: 12px;
-    cursor: pointer;
-  }
-
-  .tarjeta-sector-prog {
-    border: 1px solid var(--gris);
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 8px;
-  }
-
-  .toast-guardado {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--texto);
-    color: var(--blanco);
-    padding: 10px 18px;
-    border-radius: 8px;
-    font-size: 13px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-    z-index: 100;
-  }
-  .toast-guardado.visible { opacity: 1; }
-
-  /* --- Tarjeta de Estado (rotativa: Riego/Aux1/Aux2) --- */
-  .tarjeta-estado {
-    background: var(--blanco);
-    border-radius: 12px;
-    padding: 16px;
-    margin-top: 16px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-  }
-  .tarjeta-estado h2 {
-    font-size: 15px;
-    margin: 0 0 12px 0;
-    color: var(--texto);
-  }
-  .tarjeta-estado .fila-estado {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 0;
-    font-size: 13px;
-  }
-  .tarjeta-estado .fila-estado span:first-child { color: var(--texto-tenue); }
-  .tarjeta-estado .fila-estado span:last-child { color: var(--texto); font-weight: 600; }
-  .tarjeta-estado .botones-control {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 14px;
-  }
-  .btn-pausa {
-    background: var(--azul);
-    color: var(--blanco);
-    border: none;
-    border-radius: 6px;
-    padding: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .btn-pausa.en-pausa { background: #E24C4C; }
-  .btn-saltar {
-    background: var(--azul);
-    color: var(--blanco);
-    border: none;
-    border-radius: 6px;
-    padding: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .btn-detener-todo {
-    background: var(--azul);
-    color: var(--blanco);
-    border: none;
-    border-radius: 6px;
-    padding: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .btn-detener-todo.activo { background: #E24C4C; }
-
-  .fila-historial {
-    border-bottom: 1px solid var(--gris);
-    padding: 8px 0;
-    font-size: 12px;
-  }
-  .fila-historial:last-child { border-bottom: none; }
-  .fila-historial .linea1 { font-weight: 600; color: var(--texto); }
-  .fila-historial .linea2 { color: var(--texto-tenue); margin-top: 2px; }
-  .fila-historial.con-falla .linea1 { color: #E24C4C; }
 </style>
 </head>
 <body>
 
 <header>
   <button id="btnVolver">‹</button>
-  <div class="titulos">
+  <div style="flex:1;">
     <h1 id="nombreEquipo">Cargando…</h1>
     <p id="deviceIdTexto"></p>
   </div>
@@ -308,90 +94,123 @@
 </header>
 
 <main>
-  <div class="grid-sectores" id="gridSalidas">
-    <p class="mensaje-cargando">Cargando salidas…</p>
+
+  <div class="seccion">
+    <h2>Configuración de Salidas (SETSALIDA)</h2>
+    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--texto-tenue); margin-bottom:12px; cursor:pointer;">
+      <input type="checkbox" id="chkOcultarSinUsar" onchange="window.aplicarFiltroSalidas()">
+      Ocultar salidas sin usar
+    </label>
+    <div id="filasSalidas"></div>
   </div>
 
-  <div class="tarjeta-estado">
-    <div class="fila-estado" style="border-bottom:1px solid var(--gris); padding-bottom:10px; margin-bottom:6px;">
-      <span>Hora del equipo</span><span id="horaEquipoTexto">--:--:--</span>
+  <div class="seccion">
+    <h2>Caudal (SETCAUDAL / SETCAUDALSECTOR)</h2>
+    <div class="fila-triple">
+      <select id="tipoAgua">
+        <option value="0">Agua: sin caudalímetro</option>
+        <option value="1">Agua: factor 100 L/pulso</option>
+        <option value="2">Agua: factor 1000 L/pulso</option>
+        <option value="3">Agua: factor 10000 L/pulso</option>
+      </select>
+      <select id="tipoFert">
+        <option value="0">Fert: sin caudalímetro</option>
+        <option value="1">Fert: factor 0.1 L/pulso (100cc)</option>
+        <option value="2">Fert: factor 1 L/pulso</option>
+      </select>
+      <button class="accion" onclick="enviarSetCaudal()">Guardar tipos</button>
     </div>
-    <h2 id="tarjetaEstadoTitulo">Riego</h2>
-    <div class="fila-estado"><span>Estado</span><span id="tarjetaEstadoEstado">--</span></div>
-    <div class="fila-estado"><span>Sector activo</span><span id="tarjetaEstadoSector">--</span></div>
-    <div class="fila-estado"><span>Tiempo transcurrido</span><span id="tarjetaEstadoTranscurrido">--</span></div>
-    <div class="fila-estado"><span>Tiempo restante</span><span id="tarjetaEstadoRestante">--</span></div>
-    <div class="fila-estado" id="filaCaudalWeb"><span>Caudal regado</span><span id="tarjetaEstadoCaudal">--</span></div>
-    <div class="botones-control">
-      <button class="btn-pausa" id="btnPausarWeb">Pausar Riego</button>
-      <button class="btn-saltar" id="btnSaltarWeb">Saltar sector (Riego)</button>
-    </div>
-    <button class="btn-detener-todo" id="btnDetenerTodoWeb" style="width:100%; margin-top:8px;">Detener todo</button>
-  </div>
-
-  <div class="seccion-programas" id="seccionProgramas">
-    <div class="cabecera" id="cabeceraProgramas">
-      <h2>Programas de Riego</h2>
-      <span class="flecha">▾</span>
-    </div>
-    <div class="cuerpo">
-      <div class="fila-triple">
-        <select class="campo" id="progSeleccionado">
-          <option value="0">Riego</option>
-          <option value="1">Aux 1</option>
-          <option value="2">Aux 2</option>
-        </select>
-        <button class="btn-secundario" id="btnCargarPrograma">Cargar actual</button>
-        <button class="btn-accion" id="btnGuardarPrograma">Guardar programa</button>
-      </div>
-
-      <div class="fila-doble">
-        <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-          <input type="checkbox" id="progActivo"> Activo
-        </label>
-        <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-          <input type="checkbox" id="progLoop"> Loop
-        </label>
-      </div>
-
-      <div class="fila-doble">
-        <input class="campo" type="number" id="progHora" placeholder="Hora inicio (0-23)" min="0" max="23">
-        <input class="campo" type="number" id="progMin" placeholder="Minuto inicio (0-59)" min="0" max="59">
-      </div>
-
-      <div id="diasSemana" style="display:flex; gap:6px; margin-bottom:14px;"></div>
-
-      <div id="filasSectoresPrograma"></div>
-    </div>
-  </div>
-  <div class="seccion-programas" id="seccionAlertas">
-    <div class="cabecera" id="cabeceraAlertas">
-      <h2>Alertas (últimas 50)</h2>
-      <span class="flecha">▾</span>
-    </div>
-    <div class="cuerpo">
-      <div id="listaAlertas"><p class="mensaje-cargando">Despliega para cargar…</p></div>
+    <div class="fila-triple">
+      <input type="number" id="sectorCaudal" placeholder="N° sector">
+      <input type="number" id="caudalEsperado" placeholder="Caudal esp. (m³/h)">
+      <button class="accion" onclick="enviarSetCaudalSector()">Guardar</button>
     </div>
   </div>
 
-  <div class="seccion-programas" id="seccionHistorial">
-    <div class="cabecera" id="cabeceraHistorial">
-      <h2>Últimos Riegos (últimos 50)</h2>
-      <span class="flecha">▾</span>
-    </div>
-    <div class="cuerpo">
-      <div id="listaHistorial"><p class="mensaje-cargando">Despliega para cargar…</p></div>
+  <div class="seccion">
+    <h2>Zona Horaria (SETZONA)</h2>
+    <div class="fila-doble">
+      <select id="zonaHoraria">
+        <option value="-4">UTC -4 (invierno)</option>
+        <option value="-3">UTC -3 (verano)</option>
+      </select>
+      <button class="accion" onclick="enviarSetZona()">Aplicar</button>
     </div>
   </div>
+
+  <div class="seccion">
+    <h2>Ajustar Hora (SETHORA)</h2>
+    <button class="accion secundaria" style="width:100%;" onclick="enviarSetHora()">
+      Sincronizar con hora de este navegador
+    </button>
+  </div>
+
+  <div class="seccion">
+    <h2>Tokens de Acceso (SETTOKENOP / SETTOKENOBS)</h2>
+    <div class="fila-doble">
+      <input type="text" id="nuevoTokenOp" placeholder="Nuevo token Operador">
+      <button class="accion" onclick="enviarSetTokenOp()">Guardar</button>
+    </div>
+    <div class="fila-doble">
+      <input type="text" id="nuevoTokenObs" placeholder="Nuevo token Observador">
+      <button class="accion" onclick="enviarSetTokenObs()">Guardar</button>
+    </div>
+  </div>
+
+  <div class="seccion">
+    <h2>Bloqueo del Equipo</h2>
+    <button class="peligro" onclick="enviarBloqueo(true)">BLOQUEAR equipo</button>
+    <button class="exito" onclick="enviarBloqueo(false)">DESBLOQUEAR equipo</button>
+  </div>
+
+  <div class="seccion">
+    <h2>Programas de Riego (SETPROG / SETSECTOR / SETFERT)</h2>
+
+    <div class="fila-triple" style="margin-bottom:12px;">
+      <select id="progSeleccionado" onchange="window.cambiarProgramaUI()">
+        <option value="0">Riego</option>
+        <option value="1">Aux 1</option>
+        <option value="2">Aux 2</option>
+      </select>
+      <button class="accion secundaria" onclick="window.cargarPrograma()">Cargar actual</button>
+      <button class="accion" onclick="window.guardarPrograma()">Guardar programa</button>
+    </div>
+
+    <div class="fila-doble" style="margin-bottom:8px;">
+      <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
+        <input type="checkbox" id="progActivo"> Activo
+      </label>
+      <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
+        <input type="checkbox" id="progLoop"> Loop
+      </label>
+    </div>
+
+    <div class="fila-doble" style="margin-bottom:8px;">
+      <input type="number" id="progHora" placeholder="Hora inicio (0-23)" min="0" max="23">
+      <input type="number" id="progMin" placeholder="Minuto inicio (0-59)" min="0" max="59">
+    </div>
+
+    <div id="diasSemana" style="display:flex; gap:6px; margin-bottom:14px;"></div>
+
+    <div id="filasSectoresPrograma"></div>
+  </div>
+
+  <div class="seccion">
+    <h2>Fallas</h2>
+    <button class="accion secundaria" style="width:100%;" onclick="enviarResetFallas()">
+      RESETFALLAS — limpiar alerta activa
+    </button>
+  </div>
+
+  <div class="log" id="logMensajes"></div>
+
 </main>
-
-<div class="toast-guardado" id="toastGuardado"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
-    getFirestore, collection, query, where, getDocs
+    getFirestore, collection, query, where, getDocs, doc, getDoc
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -407,182 +226,128 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // El equipo tiene 12 salidas físicas configurables individualmente
-  // (RIEGO / BOMBA / BOMBA_INY / VALV_INY / AUX), según el campo "tipo"
-  // que responde cada GETSALIDA:n.
   const NUM_SALIDAS = 14;
   const MAX_SECTORES = 10;
   const DIAS = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
-
-  const COLOR_POR_TIPO = {
-    RIEGO:     '#2FB65A',
-    BOMBA:     '#1976D2',
-    BOMBA_INY: '#F5821F',
-    VALV_INY:  '#F5821F',
-    AUX:       '#00B8A9'
-  };
-
-  const NOMBRE_POR_TIPO = {
-    RIEGO:     'Sector de Riego',
-    BOMBA:     'Bomba',
-    BOMBA_INY: 'Bomba Inyectora',
-    VALV_INY:  'Válvula Inyectora',
-    AUX:       'Auxiliar'
+  const TIPOS = ['SIN_USAR', 'RIEGO', 'BOMBA', 'BOMBA_INY', 'VALV_INY', 'AUX'];
+  const ETIQUETA_TIPO = {
+    SIN_USAR: 'Sin usar', RIEGO: 'RIEGO', BOMBA: 'BOMBA',
+    BOMBA_INY: 'BOMBA_INY', VALV_INY: 'VALV_INY', AUX: 'AUX'
   };
 
   const params = new URLSearchParams(window.location.search);
   const deviceId = params.get('id');
 
+  let mqttClient = null;
+  let tokenSuperadmin = null;
+
   const nombreEquipo = document.getElementById('nombreEquipo');
   const deviceIdTexto = document.getElementById('deviceIdTexto');
-  const gridSalidas = document.getElementById('gridSalidas');
   const puntoConexion = document.getElementById('puntoConexion');
-  const btnVolver = document.getElementById('btnVolver');
+  const filasSalidas = document.getElementById('filasSalidas');
+  const logMensajes = document.getElementById('logMensajes');
 
-  btnVolver.addEventListener('click', () => {
-    window.location.href = 'unidades.html';
+  document.getElementById('btnVolver').addEventListener('click', () => {
+    window.location.href = 'dashboard.html';
   });
 
-  if (!deviceId) {
-    nombreEquipo.textContent = 'Equipo no especificado';
-    gridSalidas.innerHTML = '<p class="mensaje-cargando">Falta el parámetro ?id= en la URL.</p>';
-  } else {
-    deviceIdTexto.textContent = deviceId;
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = 'index.html';
-        return;
-      }
-      await cargarEquipo(user.uid, deviceId);
-    });
+  function log(msg) {
+    const hora = new Date().toLocaleTimeString();
+    logMensajes.textContent = `[${hora}] ${msg}\n` + logMensajes.textContent;
   }
 
-  async function cargarEquipo(uid, deviceId) {
-    const q = query(
-      collection(db, 'unidades'),
-      where('cliente_ref', '==', uid),
-      where('device_id', '==', deviceId)
-    );
-    const snap = await getDocs(q);
-
-    if (snap.empty) {
-      nombreEquipo.textContent = 'Equipo no encontrado';
-      gridSalidas.innerHTML = '<p class="mensaje-cargando">No tienes acceso a este equipo o no existe.</p>';
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    try {
+      const snap = await getDoc(doc(db, 'Users', user.uid));
+      if (!snap.exists()) throw new Error('sin acceso');
+    } catch (e) {
+      window.location.href = 'index.html';
       return;
     }
+    await cargarEquipo(deviceId);
+  });
 
-    const unidad = snap.docs[0].data();
+  async function cargarEquipo(deviceId) {
+    if (!deviceId) {
+      nombreEquipo.textContent = 'Falta ?id= en la URL';
+      return;
+    }
+    const q = query(collection(db, 'unidades'), where('device_id', '==', deviceId));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      nombreEquipo.textContent = 'Equipo no encontrado';
+      return;
+    }
+    const docRef = snap.docs[0];
+    const unidad = docRef.data();
     nombreEquipo.textContent = unidad.nombre || deviceId;
+    deviceIdTexto.textContent = deviceId;
 
-    construirTarjetasSalidas(NUM_SALIDAS);
+    const configSnap = await getDoc(doc(db, 'unidades', docRef.id, 'admin', 'config'));
+    if (!configSnap.exists()) {
+      log('ERROR: no existe unidades/' + docRef.id + '/admin/config con token_superadmin');
+      return;
+    }
+    tokenSuperadmin = configSnap.data().token_superadmin;
+
+    construirFilasSalidas();
     construirDiasSemana();
     construirFilasSectoresPrograma();
-    inicializarSeccionProgramas();
-    inicializarControlesEstado();
-    inicializarSeccionesHistorial();
-    conectarMQTT(unidad, deviceId);
+    conectarMQTT(deviceId);
   }
 
-  // --- Íconos por tipo (accent = color según estado, se pasa como parámetro) ---
-
-  function iconoValvula(accent) {
-    return `
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="30" y="4" width="4" height="10" fill="white"/>
-        <rect x="20" y="4" width="24" height="4" rx="1" fill="white"/>
-        <rect x="29" y="14" width="6" height="6" fill="white"/>
-        <rect x="22" y="26" width="20" height="16" rx="2" fill="white"/>
-        <circle cx="32" cy="34" r="4" fill="${accent}"/>
-        <rect x="6" y="24" width="4" height="20" fill="white"/>
-        <rect x="10" y="28" width="4" height="12" fill="white"/>
-        <rect x="14" y="30" width="8" height="8" fill="white"/>
-        <rect x="54" y="24" width="4" height="20" fill="white"/>
-        <rect x="50" y="28" width="4" height="12" fill="white"/>
-        <rect x="42" y="30" width="8" height="8" fill="white"/>
-      </svg>
-    `;
-  }
-
-  function iconoBomba(accent) {
-    return `
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="30" width="10" height="8" rx="1.5" fill="white"/>
-        <rect x="12" y="22" width="20" height="24" rx="2" fill="white"/>
-        <rect x="16" y="27" width="12" height="2.4" fill="${accent}"/>
-        <rect x="16" y="32" width="12" height="2.4" fill="${accent}"/>
-        <rect x="16" y="37" width="12" height="2.4" fill="${accent}"/>
-        <circle cx="42" cy="34" r="15" fill="white"/>
-        <circle cx="42" cy="34" r="5" fill="${accent}"/>
-        <circle cx="42" cy="21" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
-        <circle cx="55" cy="34" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
-        <circle cx="42" cy="47" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
-        <circle cx="29" cy="34" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
-        <rect x="50" y="6" width="8" height="10" rx="1.5" fill="white"/>
-        <rect x="49" y="14" width="10" height="6" fill="white"/>
-        <rect x="10" y="46" width="44" height="4" rx="1" fill="white"/>
-        <rect x="16" y="50" width="5" height="5" fill="white"/>
-        <rect x="43" y="50" width="5" height="5" fill="white"/>
-      </svg>
-    `;
-  }
-
-  function iconoAux() {
-    return `
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="24" cy="26" r="16" stroke="white" stroke-width="4" fill="none"/>
-        <path d="M24 6 L24 22" stroke="white" stroke-width="4" stroke-linecap="round"/>
-      </svg>
-    `;
-  }
-
-  function generarIcono(tipo, accent) {
-    if (tipo === 'RIEGO' || tipo === 'VALV_INY') return iconoValvula(accent);
-    if (tipo === 'BOMBA' || tipo === 'BOMBA_INY') return iconoBomba(accent);
-    if (tipo === 'AUX') return iconoAux();
-    return ''; // tipo desconocido / aún sin datos
-  }
-
-  function construirTarjetasSalidas(n) {
-    gridSalidas.innerHTML = '';
-    for (let i = 1; i <= n; i++) {
+  function construirFilasSalidas() {
+    filasSalidas.innerHTML = '';
+    for (let i = 1; i <= NUM_SALIDAS; i++) {
       const div = document.createElement('div');
-      div.className = 'tarjeta-sector';
-      div.id = `salida-${i}`;
+      div.className = 'fila-salida';
       div.innerHTML = `
-        <div class="nombre" id="nombre-${i}">Salida ${i}</div>
-        <div class="circulo-icono" id="icono-${i}"></div>
-        <div class="estado-texto" id="estado-${i}">Consultando…</div>
+        <div class="n">${i}</div>
+        <select id="tipo-${i}" onchange="window.aplicarFiltroSalidas()">
+          ${TIPOS.map(t => `<option value="${t}">${ETIQUETA_TIPO[t]}</option>`).join('')}
+        </select>
+        <input type="number" id="sector-${i}" placeholder="Sector">
+        <input type="text" id="nombre-${i}" placeholder="Nombre">
+        <button class="accion" onclick="window.enviarSetSalida(${i})">Guardar</button>
       `;
-      gridSalidas.appendChild(div);
+      filasSalidas.appendChild(div);
     }
   }
 
-  // ============================================================
-  // Programas de Riego (SETPROG / SETSECTOR / SETFERT — nivel Operador)
-  // ============================================================
+  window.aplicarFiltroSalidas = function () {
+    const ocultar = document.getElementById('chkOcultarSinUsar').checked;
+    for (let i = 1; i <= NUM_SALIDAS; i++) {
+      const tipo = document.getElementById(`tipo-${i}`).value;
+      const fila = document.getElementById(`tipo-${i}`).closest('.fila-salida');
+      fila.style.display = (ocultar && tipo === 'SIN_USAR') ? 'none' : 'grid';
+    }
+  };
 
-  let tokenOperador = null;
-  let publicarComandoOperador = null;
-  let salidasInfo = {};  // n -> {tipo, sectorAsoc} -- para filtrar sectores en Aux1/Aux2
+  // Precarga los campos de una fila de salida con lo que ya está
+  // guardado en el equipo (respuesta a GETSALIDA:n al conectar).
+  function procesarRespuestaSalida(msg) {
+    // SAL:n:tipo:sector_asoc:nombre:caudal_esperado:estado_on_off
+    const p = msg.split(':');
+    const n = parseInt(p[1], 10);
+    const tipo = p[2];
+    const sectorAsoc = p[3];
+    const nombre = p[4];
 
-  function mostrarToast(msg) {
-    const toast = document.getElementById('toastGuardado');
-    toast.textContent = msg;
-    toast.classList.add('visible');
-    setTimeout(() => toast.classList.remove('visible'), 2200);
+    const selTipo = document.getElementById(`tipo-${n}`);
+    const inpSector = document.getElementById(`sector-${n}`);
+    const inpNombre = document.getElementById(`nombre-${n}`);
+    if (!selTipo || !inpSector || !inpNombre) return;
+
+    selTipo.value = tipo;
+    inpSector.value = sectorAsoc;
+    inpNombre.value = nombre;
+    window.aplicarFiltroSalidas();
   }
 
-  function inicializarSeccionProgramas() {
-    const seccion = document.getElementById('seccionProgramas');
-    const cabecera = document.getElementById('cabeceraProgramas');
-    cabecera.addEventListener('click', () => {
-      seccion.classList.toggle('abierta');
-    });
-
-    document.getElementById('progSeleccionado').addEventListener('change', construirFilasSectoresPrograma);
-    document.getElementById('btnCargarPrograma').addEventListener('click', cargarPrograma);
-    document.getElementById('btnGuardarPrograma').addEventListener('click', guardarPrograma);
-  }
+  // ============================================================
+  // Programas de Riego
+  // ============================================================
 
   function construirDiasSemana() {
     const cont = document.getElementById('diasSemana');
@@ -594,71 +359,40 @@
     `).join('');
   }
 
-  function sectoresAuxDisponibles() {
-    const set = new Set();
-    for (const n in salidasInfo) {
-      if (salidasInfo[n].tipo === 'AUX') set.add(salidasInfo[n].sectorAsoc);
-    }
-    return [...set].sort((a, b) => a - b);
-  }
-
-  function sectoresRiegoDisponibles() {
-    const set = new Set();
-    for (const n in salidasInfo) {
-      if (salidasInfo[n].tipo === 'RIEGO') set.add(salidasInfo[n].sectorAsoc);
-    }
-    return [...set].sort((a, b) => a - b);
-  }
-
   function construirFilasSectoresPrograma() {
     const esAux = document.getElementById('progSeleccionado').value !== '0';
     const cont = document.getElementById('filasSectoresPrograma');
     cont.innerHTML = '';
-
-    // Igual criterio para ambos: solo se muestran sectores que tengan una
-    // salida real asociada del tipo correspondiente -- RIEGO para el
-    // programa Riego, AUX para Aux1/Aux2. Un sector sin ninguna salida
-    // asignada no aparece en ninguno de los dos.
-    const sectoresAMostrar = esAux ? sectoresAuxDisponibles() : sectoresRiegoDisponibles();
-
-    if (sectoresAMostrar.length === 0) {
-      cont.innerHTML = esAux
-        ? '<p class="mensaje-cargando">No hay salidas tipo AUX configuradas. Configúralas en la sección de Salidas.</p>'
-        : '<p class="mensaje-cargando">No hay salidas tipo RIEGO configuradas. Configúralas en la sección de Salidas.</p>';
-      return;
-    }
-
-    for (const s of sectoresAMostrar) {
+    for (let s = 0; s < MAX_SECTORES; s++) {
       const div = document.createElement('div');
-      div.className = 'tarjeta-sector-prog';
+      div.style.cssText = 'border:1px solid var(--borde); border-radius:8px; padding:10px; margin-bottom:8px;';
       div.innerHTML = `
         <div class="fila-triple" style="margin-bottom:${esAux ? '0' : '8px'};">
           <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
-            <input type="checkbox" id="sec-hab-${s}"> ${esAux ? (salidasInfo[Object.keys(salidasInfo).find(n => salidasInfo[n].tipo === 'AUX' && salidasInfo[n].sectorAsoc === s)]?.nombre || `Salida (sector ${s + 1})`) : `Sector ${s + 1}`}
+            <input type="checkbox" id="sec-hab-${s}"> Sector ${s + 1}
           </label>
-          <input class="campo" type="number" id="sec-hh-${s}" placeholder="hh" min="0" max="23">
-          <input class="campo" type="number" id="sec-mm-${s}" placeholder="mm" min="0" max="59">
+          <input type="number" id="sec-hh-${s}" placeholder="hh" min="0" max="23">
+          <input type="number" id="sec-mm-${s}" placeholder="mm" min="0" max="59">
         </div>
         ${esAux ? '' : `
         <div class="fila-doble" style="margin-bottom:6px;">
           <label style="display:flex; align-items:center; gap:6px; font-size:12px;">
             <input type="checkbox" id="sec-fert-activa-${s}" onchange="window.toggleFertSector(${s})"> Fertilización
           </label>
-          <select class="campo" id="sec-fert-tipo-${s}">
+          <select id="sec-fert-tipo-${s}">
             <option value="1">Directo (litros objetivo)</option>
             <option value="2">Fraccionado (pulsos adaptativos)</option>
           </select>
         </div>
         <div class="fila-triple" id="sec-fert-campos-${s}" style="display:none;">
-          <input class="campo" type="number" id="sec-fert-litros-${s}" placeholder="Litros">
-          <input class="campo" type="number" id="sec-fert-antes-${s}" placeholder="Agua antes (min)">
-          <input class="campo" type="number" id="sec-fert-despues-${s}" placeholder="Agua después (min)">
+          <input type="number" id="sec-fert-litros-${s}" placeholder="Litros">
+          <input type="number" id="sec-fert-antes-${s}" placeholder="Agua antes (min)">
+          <input type="number" id="sec-fert-despues-${s}" placeholder="Agua después (min)">
         </div>`}
-        <button class="btn-secundario" style="width:100%; margin-top:4px;" data-sector="${s}">
-          Guardar ${esAux ? 'salida' : 'sector'} ${s + 1}
+        <button class="accion secundaria" style="width:100%; margin-top:8px;" onclick="window.guardarSector(${s})">
+          Guardar sector ${s + 1}
         </button>
       `;
-      div.querySelector('button[data-sector]').addEventListener('click', () => guardarSector(s));
       cont.appendChild(div);
     }
   }
@@ -669,17 +403,20 @@
     if (campos) campos.style.display = activa ? 'grid' : 'none';
   };
 
-  function cargarPrograma() {
-    if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
-    const idx = document.getElementById('progSeleccionado').value;
-    publicarComandoOperador(`GETPROG:${idx}`);
-    for (let s = 0; s < MAX_SECTORES; s++) {
-      publicarComandoOperador(`GETSECTOR:${idx}:${s}`);
-    }
-  }
+  window.cambiarProgramaUI = function () {
+    construirFilasSectoresPrograma();
+  };
 
-  function guardarPrograma() {
-    if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
+  window.cargarPrograma = function () {
+    const idx = document.getElementById('progSeleccionado').value;
+    window._publicarComando(`GETPROG:${idx}`);
+    // Solicita también los 10 sectores del programa
+    for (let s = 0; s < MAX_SECTORES; s++) {
+      window._publicarComando(`GETSECTOR:${idx}:${s}`);
+    }
+  };
+
+  window.guardarPrograma = function () {
     const idx = document.getElementById('progSeleccionado').value;
     const activo = document.getElementById('progActivo').checked ? 1 : 0;
     const loop = document.getElementById('progLoop').checked ? 1 : 0;
@@ -687,17 +424,15 @@
     const hora = document.getElementById('progHora').value || '0';
     const min = document.getElementById('progMin').value || '0';
     const dias = DIAS.map((_, i) => document.getElementById(`dia-${i}`).checked ? 1 : 0).join(':');
-    publicarComandoOperador(`SETPROG:${idx}:${activo}:${loop}:${esAux}:${hora}:${min}:${dias}`);
-    mostrarToast('Programa guardado.');
-  }
+    window._publicarComando(`SETPROG:${idx}:${activo}:${loop}:${esAux}:${hora}:${min}:${dias}`);
+  };
 
-  function guardarSector(s) {
-    if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
+  window.guardarSector = function (s) {
     const idx = document.getElementById('progSeleccionado').value;
     const hab = document.getElementById(`sec-hab-${s}`).checked ? 1 : 0;
     const hh = document.getElementById(`sec-hh-${s}`).value || '0';
     const mm = document.getElementById(`sec-mm-${s}`).value || '0';
-    publicarComandoOperador(`SETSECTOR:${idx}:${s}:${hab}:${hh}:${mm}`);
+    window._publicarComando(`SETSECTOR:${idx}:${s}:${hab}:${hh}:${mm}`);
 
     // Solo el programa de riego (idx=0) tiene fertilización
     if (idx === '0') {
@@ -706,15 +441,15 @@
       const litros = document.getElementById(`sec-fert-litros-${s}`).value || '0';
       const antes = document.getElementById(`sec-fert-antes-${s}`).value || '0';
       const despues = document.getElementById(`sec-fert-despues-${s}`).value || '0';
-      publicarComandoOperador(`SETFERT:${idx}:${s}:${fertActiva}:${fertTipo}:${litros}:${antes}:${despues}`);
+      window._publicarComando(`SETFERT:${idx}:${s}:${fertActiva}:${fertTipo}:${litros}:${antes}:${despues}`);
     }
-    mostrarToast(`Sector ${s + 1} guardado.`);
-  }
+  };
 
   // Parser de respuestas PROG:/SEC: para precargar la UI tras GETPROG/GETSECTOR
   function procesarRespuestaPrograma(msg) {
     if (msg.startsWith('PROG:')) {
       const p = msg.split(':');
+      // PROG:idx:activo:loop:es_auxiliar:hora:min:Lu:Ma:Mi:Ju:Vi:Sa:Do
       const idxSel = document.getElementById('progSeleccionado').value;
       if (p[1] !== idxSel) return;
       document.getElementById('progActivo').checked = p[2] === '1';
@@ -727,12 +462,11 @@
       }
     } else if (msg.startsWith('SEC:')) {
       const p = msg.split(':');
+      // SEC:prog:sector:hab:hh:mm:fert_activa:fert_tipo:litros:agua_antes:agua_despues
       const idxSel = document.getElementById('progSeleccionado').value;
       if (p[1] !== idxSel) return;
       const s = parseInt(p[2], 10);
-      const habEl = document.getElementById(`sec-hab-${s}`);
-      if (!habEl) return;  // sector no renderizado (filtrado en Aux1/Aux2)
-      habEl.checked = p[3] === '1';
+      document.getElementById(`sec-hab-${s}`).checked = p[3] === '1';
       document.getElementById(`sec-hh-${s}`).value = p[4];
       document.getElementById(`sec-mm-${s}`).value = p[5];
       const fertActiva = document.getElementById(`sec-fert-activa-${s}`);
@@ -747,423 +481,117 @@
     }
   }
 
-  // ============================================================
-  // Tarjeta de Estado (rotativa) -- misma lógica que la pantalla física:
-  // rota cada 10s entre los programas que estén realmente ejecutando
-  // (Riego/Aux1/Aux2). Pausa y Saltar solo controlan Riego (idx 0).
-  // ============================================================
-  const NOMBRES_PROGRAMA_WEB = ['Riego', 'Aux 1', 'Aux 2'];
-  const ROTACION_WEB_MS = 10000;
-  let estadosPrograma = {};   // {0:{...}, 1:{...}, 2:{...}} -- último EST: recibido de cada uno
-  let idxMostradoWeb = 0;
-  let tUltimaRotacionWeb = 0;
-
-  function nombreEtapaWeb(estadoInterno, ejecutando, pausado) {
-    if (!ejecutando) return 'Inactivo';
-    if (pausado) return 'Pausado';
-    switch (estadoInterno) {
-      case 1: return 'Regando';
-      case 2: return 'Fertilizando';
-      case 3: return 'Fertilizando';
-      case 4: return 'Regando (post-fert)';
-      default: return 'Inactivo';
-    }
-  }
-
-  function formatoMinSeg(totalSeg) {
-    if (totalSeg < 0) return '--';
-    const m = Math.floor(totalSeg / 60);
-    const s = totalSeg % 60;
-    return `${m}:${String(s).padStart(2, '0')}`;
-  }
-
-  function procesarRespuestaEstado(msg) {
-    // EST:idx:ejecutando:programa:sector:estado_interno:litros_agua:litros_fert:falla_fert:pausado:transcurrido_seg:restante_seg:alerta
-    const p = msg.split(':');
-    const idx = parseInt(p[1], 10);
-    estadosPrograma[idx] = {
-      ejecutando: p[2] === '1',
-      sector: parseInt(p[4], 10),
-      estadoInterno: parseInt(p[5], 10),
-      litrosAgua: parseFloat(p[6]),
-      fallaFert: p[8] === '1',
-      pausado: p[9] === '1',
-      transcurridoSeg: parseInt(p[10], 10),
-      restanteSeg: parseInt(p[11], 10)
-    };
-    actualizarRotacionWeb();
-    renderTarjetaEstadoWeb();
-  }
-
-  function actualizarRotacionWeb() {
-    const activos = [];
-    for (let i = 0; i < 3; i++) {
-      if (estadosPrograma[i] && estadosPrograma[i].ejecutando) activos.push(i);
-    }
-    if (activos.length === 0) { idxMostradoWeb = 0; return; }
-    if (!activos.includes(idxMostradoWeb)) {
-      idxMostradoWeb = activos[0];
-      tUltimaRotacionWeb = Date.now();
-      return;
-    }
-    if (activos.length > 1 && (Date.now() - tUltimaRotacionWeb >= ROTACION_WEB_MS)) {
-      tUltimaRotacionWeb = Date.now();
-      const pos = activos.indexOf(idxMostradoWeb);
-      idxMostradoWeb = activos[(pos + 1) % activos.length];
-    }
-  }
-
-  function renderTarjetaEstadoWeb() {
-    const est = estadosPrograma[idxMostradoWeb];
-    document.getElementById('tarjetaEstadoTitulo').textContent = NOMBRES_PROGRAMA_WEB[idxMostradoWeb];
-
-    if (!est) {
-      document.getElementById('tarjetaEstadoEstado').textContent = '--';
-      document.getElementById('tarjetaEstadoSector').textContent = '--';
-      document.getElementById('tarjetaEstadoTranscurrido').textContent = '--';
-      document.getElementById('tarjetaEstadoRestante').textContent = '--';
-    } else {
-      document.getElementById('tarjetaEstadoEstado').textContent =
-        nombreEtapaWeb(est.estadoInterno, est.ejecutando, est.pausado);
-      document.getElementById('tarjetaEstadoSector').textContent = est.ejecutando ? (est.sector + 1) : '--';
-      document.getElementById('tarjetaEstadoTranscurrido').textContent =
-        est.ejecutando ? formatoMinSeg(est.transcurridoSeg) : '--';
-      document.getElementById('tarjetaEstadoRestante').textContent =
-        est.ejecutando ? formatoMinSeg(est.restanteSeg) : '--';
-    }
-
-    const filaCaudal = document.getElementById('filaCaudalWeb');
-    if (idxMostradoWeb === 0) {
-      filaCaudal.style.display = 'flex';
-      document.getElementById('tarjetaEstadoCaudal').textContent =
-        est ? `${est.litrosAgua.toFixed(2)} L` : '--';
-    } else {
-      filaCaudal.style.display = 'none';
-    }
-
-    // Botón Pausar/Reanudar -- siempre refleja el estado de Riego (idx 0),
-    // sin importar cuál programa se esté mostrando en la tarjeta.
-    const riego = estadosPrograma[0];
-    const btnPausar = document.getElementById('btnPausarWeb');
-    if (riego && riego.pausado) {
-      btnPausar.textContent = 'Reanudar Riego';
-      btnPausar.classList.add('en-pausa');
-    } else {
-      btnPausar.textContent = 'Pausar Riego';
-      btnPausar.classList.remove('en-pausa');
-    }
-
-    // Botón Detener todo -- rojo si Riego, Aux1 o Aux2 está corriendo
-    const algunoCorriendo = [0, 1, 2].some(i => estadosPrograma[i] && estadosPrograma[i].ejecutando);
-    document.getElementById('btnDetenerTodoWeb').classList.toggle('activo', algunoCorriendo);
-  }
-
-  function inicializarControlesEstado() {
-    document.getElementById('btnPausarWeb').addEventListener('click', () => {
-      if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
-      const riego = estadosPrograma[0];
-      publicarComandoOperador((riego && riego.pausado) ? 'REANUDAR' : 'PAUSAR');
-    });
-    document.getElementById('btnSaltarWeb').addEventListener('click', () => {
-      if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
-      publicarComandoOperador('SALTAR');
-    });
-    document.getElementById('btnDetenerTodoWeb').addEventListener('click', () => {
-      if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
-      publicarComandoOperador('DETENERTODO');
-    });
-  }
-
-  // ============================================================
-  // Historial: Alertas y Últimos Riegos (últimas 50, buffer circular
-  // en el equipo). Se cargan solo al desplegar la tarjeta (no en cada
-  // carga de página) para no saturar de mensajes MQTT innecesarios.
-  // ============================================================
-  let alertasData = {};       // idx -> {timestamp, programa, sector, mensaje}
-  let alertasCountEsperado = null;
-  let registrosData = {};     // idx -> {timestamp, programa, sector, litrosAgua, litrosFert, conFalla, duracionSeg}
-  let registrosCountEsperado = null;
-
-  function formatoFechaHora(timestampSeg) {
-    if (!timestampSeg) return 'Fecha desconocida';
-    return new Date(timestampSeg * 1000).toLocaleString('es-CL');
-  }
-
-  function inicializarSeccionesHistorial() {
-    const cabeceraAlertas = document.getElementById('cabeceraAlertas');
-    const seccionAlertas = document.getElementById('seccionAlertas');
-    cabeceraAlertas.addEventListener('click', () => {
-      const yaAbierta = seccionAlertas.classList.contains('abierta');
-      seccionAlertas.classList.toggle('abierta');
-      if (!yaAbierta) cargarAlertas();
-    });
-
-    const cabeceraHistorial = document.getElementById('cabeceraHistorial');
-    const seccionHistorial = document.getElementById('seccionHistorial');
-    cabeceraHistorial.addEventListener('click', () => {
-      const yaAbierta = seccionHistorial.classList.contains('abierta');
-      seccionHistorial.classList.toggle('abierta');
-      if (!yaAbierta) cargarHistorial();
-    });
-  }
-
-  function cargarAlertas() {
-    if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
-    alertasData = {};
-    alertasCountEsperado = null;
-    document.getElementById('listaAlertas').innerHTML = '<p class="mensaje-cargando">Cargando…</p>';
-    publicarComandoOperador('GETALERTASCOUNT');
-  }
-
-  function cargarHistorial() {
-    if (!publicarComandoOperador) { mostrarToast('Sin conexión aún.'); return; }
-    registrosData = {};
-    registrosCountEsperado = null;
-    document.getElementById('listaHistorial').innerHTML = '<p class="mensaje-cargando">Cargando…</p>';
-    publicarComandoOperador('GETREGISTROSCOUNT');
-  }
-
-  function procesarRespuestaAlerta(msg) {
-    if (msg.startsWith('ALERTCOUNT:')) {
-      const count = parseInt(msg.split(':')[1], 10);
-      alertasCountEsperado = count;
-      if (count === 0) {
-        document.getElementById('listaAlertas').innerHTML = '<p class="mensaje-cargando">Sin alertas registradas.</p>';
-        return;
-      }
-      for (let i = 0; i < count; i++) publicarComandoOperador(`GETALERTAS:${i}`);
-      return;
-    }
-    if (msg.startsWith('ALERT:')) {
-      const p = msg.split(':');
-      const idx = parseInt(p[1], 10);
-      // ALERT:n:timestamp:programa:sector:mensaje -- el mensaje se
-      // reconstruye desde el índice 5 por si contuviera ":" (no debería,
-      // pero por seguridad no se corta ahí).
-      const mensaje = p.slice(5).join(':');
-      alertasData[idx] = {
-        timestamp: parseInt(p[2], 10),
-        programa: parseInt(p[3], 10),
-        sector: parseInt(p[4], 10),
-        mensaje: mensaje
-      };
-      renderAlertas();
-    }
-  }
-
-  function procesarRespuestaHistorial(msg) {
-    if (msg.startsWith('REGCOUNT:')) {
-      const count = parseInt(msg.split(':')[1], 10);
-      registrosCountEsperado = count;
-      if (count === 0) {
-        document.getElementById('listaHistorial').innerHTML = '<p class="mensaje-cargando">Sin riegos registrados.</p>';
-        return;
-      }
-      for (let i = 0; i < count; i++) publicarComandoOperador(`GETREGISTROS:${i}`);
-      return;
-    }
-    if (msg.startsWith('REG:')) {
-      const p = msg.split(':');
-      const idx = parseInt(p[1], 10);
-      registrosData[idx] = {
-        timestamp: parseInt(p[2], 10),
-        programa: parseInt(p[3], 10),
-        sector: parseInt(p[4], 10),
-        litrosAgua: parseFloat(p[5]),
-        litrosFert: parseFloat(p[6]),
-        conFalla: p[7] === '1',
-        duracionSeg: parseInt(p[8], 10)
-      };
-      renderHistorial();
-    }
-  }
-
-  function renderAlertas() {
-    if (alertasCountEsperado === null) return;
-    const idxs = Object.keys(alertasData).map(Number);
-    if (idxs.length < alertasCountEsperado) return;  // esperar a que lleguen todas
-    // Más reciente primero (los índices guardados vienen del más antiguo
-    // al más nuevo, así que se recorren al revés)
-    idxs.sort((a, b) => b - a);
-    const html = idxs.map(i => {
-      const a = alertasData[i];
-      const nombreProg = NOMBRES_PROGRAMA_WEB[a.programa] || `Prog ${a.programa}`;
-      return `
-        <div class="fila-historial con-falla">
-          <div class="linea1">${a.mensaje}</div>
-          <div class="linea2">${nombreProg} — Sector ${a.sector + 1} · ${formatoFechaHora(a.timestamp)}</div>
-        </div>`;
-    }).join('');
-    document.getElementById('listaAlertas').innerHTML = html;
-  }
-
-  function renderHistorial() {
-    if (registrosCountEsperado === null) return;
-    const idxs = Object.keys(registrosData).map(Number);
-    if (idxs.length < registrosCountEsperado) return;
-    idxs.sort((a, b) => b - a);
-    const html = idxs.map(i => {
-      const r = registrosData[i];
-      const nombreProg = NOMBRES_PROGRAMA_WEB[r.programa] || `Prog ${r.programa}`;
-      const dur = formatoMinSeg(r.duracionSeg);
-      const claseFalla = r.conFalla ? 'con-falla' : '';
-      const etiquetaFalla = r.conFalla ? ' (con falla)' : '';
-      return `
-        <div class="fila-historial ${claseFalla}">
-          <div class="linea1">${nombreProg} — Sector ${r.sector + 1}${etiquetaFalla}</div>
-          <div class="linea2">${formatoFechaHora(r.timestamp)} · ${dur} · ${r.litrosAgua.toFixed(2)} L agua${r.litrosFert > 0 ? ` · ${r.litrosFert.toFixed(2)} L fert` : ''}</div>
-        </div>`;
-    }).join('');
-    document.getElementById('listaHistorial').innerHTML = html;
-  }
-
-  function procesarRespuestaHora(msg) {
-    // HORA:dd:mm:aaaa:hh:mm:ss
-    const p = msg.split(':');
-    const dia = parseInt(p[1], 10), mes = parseInt(p[2], 10), anio = parseInt(p[3], 10);
-    const hh = parseInt(p[4], 10), mm = parseInt(p[5], 10), ss = parseInt(p[6], 10);
-
-    const horaEquipo = new Date(anio, mes - 1, dia, hh, mm, ss);
-    const horaTexto = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
-
-    const diffSeg = Math.round((Date.now() - horaEquipo.getTime()) / 1000);
-    const el = document.getElementById('horaEquipoTexto');
-    if (Math.abs(diffSeg) > 60) {
-      el.textContent = `${horaTexto} ⚠️ desfasada ${diffSeg > 0 ? diffSeg : -diffSeg}s vs tu navegador`;
-      el.style.color = '#E24C4C';
-    } else {
-      el.textContent = `${horaTexto} (sincronizada)`;
-      el.style.color = '';
-    }
-  }
-
-  function conectarMQTT(unidad, deviceId) {
-    const client = mqtt.connect('wss://e0b71edcce184b74a7a5a87fc9d2b605.s1.eu.hivemq.cloud:8884/mqtt', {
+  function conectarMQTT(deviceId) {
+    mqttClient = mqtt.connect('wss://e0b71edcce184b74a7a5a87fc9d2b605.s1.eu.hivemq.cloud:8884/mqtt', {
       username: 'pluo_web_client',
       password: 'Pluo2610',
-      clientId: 'web_equipo_' + Math.random().toString(16).slice(2)
+      clientId: 'web_admin_' + Math.random().toString(16).slice(2)
     });
 
-    const timeouts = {};
-
-    tokenOperador = unidad.token_operador || null;
-    publicarComandoOperador = (comando) => {
-      if (!tokenOperador) { mostrarToast('Este equipo no tiene token_operador configurado.'); return; }
-      client.publish(`pluo/${deviceId}/cmd`, `${tokenOperador}:${comando}`);
-    };
-
-    client.on('connect', () => {
+    mqttClient.on('connect', () => {
       puntoConexion.classList.add('conectado');
-      client.subscribe(`pluo/${deviceId}/resp`);
+      mqttClient.subscribe(`pluo/${deviceId}/resp`);
+      log('Conectado al broker.');
 
+      // Precargar la config real de salidas -- antes este panel siempre
+      // se veía vacío al cargar, aunque el equipo ya tuviera todo
+      // guardado (nunca pedía GETSALIDA, solo servía para escribir).
       for (let i = 1; i <= NUM_SALIDAS; i++) {
-        client.publish(`pluo/${deviceId}/cmd`, `${unidad.token_observador}:GETSALIDA:${i}`);
-        timeouts[i] = setTimeout(() => {
-          actualizarSalida(i, null, 'sin_datos');
-        }, 4000);
+        mqttClient.publish(`pluo/${deviceId}/cmd`, `${tokenSuperadmin}:GETSALIDA:${i}`);
       }
-
-      // Estado de los 3 programas -- se pide de entrada y se refresca
-      // cada 2s (no hay push desde el equipo, solo respuesta a consulta).
-      const pedirEstados = () => {
-        for (let i = 0; i < 3; i++) {
-          client.publish(`pluo/${deviceId}/cmd`, `${tokenOperador || unidad.token_observador}:GETESTADO:${i}`);
-        }
-        client.publish(`pluo/${deviceId}/cmd`, `${unidad.token_observador}:GETHORA`);
-      };
-      pedirEstados();
-      setInterval(pedirEstados, 2000);
     });
 
-    client.on('message', (topic, mensaje) => {
+    mqttClient.on('message', (topic, mensaje) => {
       const texto = mensaje.toString();
-
-      if (texto.startsWith('PROG:') || texto.startsWith('SEC:')) {
-        procesarRespuestaPrograma(texto);
+      log('RESP: ' + texto);
+      if (texto.startsWith('SAL:')) {
+        procesarRespuestaSalida(texto);
         return;
       }
-      if (texto.startsWith('EST:')) {
-        procesarRespuestaEstado(texto);
-        return;
-      }
-      if (texto.startsWith('ALERTCOUNT:') || texto.startsWith('ALERT:')) {
-        procesarRespuestaAlerta(texto);
-        return;
-      }
-      if (texto.startsWith('REGCOUNT:') || texto.startsWith('REG:')) {
-        procesarRespuestaHistorial(texto);
-        return;
-      }
-      if (texto.startsWith('HORA:')) {
-        procesarRespuestaHora(texto);
-        return;
-      }
-
-    if (texto.startsWith('SAL:')) {
-        // SAL:n:tipo:sector_asoc:nombre:caudal_esperado:estado_on_off
-        const partes = texto.split(':');
-        const n = parseInt(partes[1], 10);
-        const tipo = partes[2];
-        const sectorAsoc = parseInt(partes[3], 10);
-        const nombreSalida = partes[4];
-        const estadoOnOff = partes[6];
-
-        salidasInfo[n] = { tipo, sectorAsoc };
-        // Refrescar la lista de sectores del programa que se esté viendo
-        // -- tanto Riego (debe excluir sectores AUX) como Aux1/Aux2 (debe
-        // incluir solo los AUX) dependen de esta info de salidas.
-        construirFilasSectoresPrograma();
-
-        clearTimeout(timeouts[n]);
-
-        const tarjeta = document.getElementById(`salida-${n}`);
-
-        // Salidas sin tipo asignado no se muestran al cliente -- solo
-        // interesan las que realmente están en uso.
-        if (tipo === 'SIN_USAR') {
-          if (tarjeta) tarjeta.style.display = 'none';
-          return;
-        }
-        if (tarjeta) tarjeta.style.display = '';
-
-        const nombreEl = document.getElementById(`nombre-${n}`);
-        if (nombreEl) {
-          nombreEl.textContent = nombreSalida || NOMBRE_POR_TIPO[tipo] || `Salida ${n}`;
-        }
-
-        const activo = (estadoOnOff === '1' || estadoOnOff === 'ON');
-        actualizarSalida(n, tipo, activo ? 'activo' : 'inactivo');
-      }
+      procesarRespuestaPrograma(texto);
     });
 
-    client.on('error', (err) => {
-      console.error('Error MQTT:', err);
+    mqttClient.on('error', (err) => {
       puntoConexion.classList.remove('conectado');
+      log('ERROR MQTT: ' + err.message);
     });
+
+    window._publicarComando = (comando) => {
+      if (!mqttClient || !tokenSuperadmin) {
+        log('No hay conexión o token Superadmin aún.');
+        return;
+      }
+      const payload = `${tokenSuperadmin}:${comando}`;
+      mqttClient.publish(`pluo/${deviceId}/cmd`, payload);
+      log('CMD: ' + payload);
+    };
   }
 
-  function actualizarSalida(n, tipo, estado) {
-    const circulo = document.getElementById(`icono-${n}`);
-    const texto = document.getElementById(`estado-${n}`);
-    if (!circulo || !texto) return;
+  // --- Acciones expuestas a los botones (onclick inline) ---
 
-    let color = '#B9C2C6'; // gris (inactivo / sin datos)
-    let etiqueta = 'No activo';
-
-    if (estado === 'alerta') {
-      color = '#E24C4C';
-      etiqueta = 'Alerta';
-    } else if (estado === 'activo') {
-      color = COLOR_POR_TIPO[tipo] || '#2FB65A';
-      etiqueta = 'Activo';
-    } else if (estado === 'sin_datos') {
-      etiqueta = 'Sin datos';
+  window.enviarSetSalida = function (n) {
+    const tipo = document.getElementById(`tipo-${n}`).value;
+    if (tipo === 'SIN_USAR') {
+      log(`Salida ${n}: "Sin usar" es solo un filtro visual — elige un tipo real antes de guardar.`);
+      return;
     }
+    const sector = document.getElementById(`sector-${n}`).value || '0';
+    const nombre = document.getElementById(`nombre-${n}`).value || `Salida${n}`;
+    window._publicarComando(`SETSALIDA:${n}:${tipo}:${sector}:${nombre}`);
+  };
 
-    circulo.style.background = color;
-    circulo.innerHTML = tipo ? generarIcono(tipo, color) : '';
-    texto.textContent = etiqueta;
-  }
+  window.enviarSetCaudal = function () {
+    const tipoAgua = document.getElementById('tipoAgua').value;
+    const tipoFert = document.getElementById('tipoFert').value;
+    window._publicarComando(`SETCAUDAL:${tipoAgua}:${tipoFert}`);
+  };
+
+  window.enviarSetCaudalSector = function () {
+    const sector = document.getElementById('sectorCaudal').value;
+    const caudal = document.getElementById('caudalEsperado').value;
+    if (!sector || !caudal) { log('Faltan datos de sector/caudal.'); return; }
+    window._publicarComando(`SETCAUDALSECTOR:${sector}:${caudal}`);
+  };
+
+  window.enviarSetZona = function () {
+    const zona = document.getElementById('zonaHoraria').value;
+    window._publicarComando(`SETZONA:${zona}`);
+  };
+
+  window.enviarSetHora = function () {
+    const ahora = new Date();
+    const campos = [
+      ahora.getDate(),
+      ahora.getMonth() + 1,
+      ahora.getFullYear(),
+      ahora.getHours(),
+      ahora.getMinutes(),
+      ahora.getSeconds()
+    ].join(':');
+    window._publicarComando(`SETHORA:${campos}`);
+  };
+
+  window.enviarSetTokenOp = function () {
+    const token = document.getElementById('nuevoTokenOp').value;
+    if (!token) { log('Falta el nuevo token Operador.'); return; }
+    window._publicarComando(`SETTOKENOP:${token}`);
+  };
+
+  window.enviarSetTokenObs = function () {
+    const token = document.getElementById('nuevoTokenObs').value;
+    if (!token) { log('Falta el nuevo token Observador.'); return; }
+    window._publicarComando(`SETTOKENOBS:${token}`);
+  };
+
+  window.enviarBloqueo = function (bloquear) {
+    const comando = bloquear ? 'BLOQUEAR' : 'DESBLOQUEAR';
+    if (!confirm(`¿Confirmas ${comando} este equipo?`)) return;
+    window._publicarComando(comando);
+  };
+
+  window.enviarResetFallas = function () {
+    window._publicarComando('RESETFALLAS');
+  };
 </script>
 
 <script src="https://unpkg.com/mqtt@5.10.0/dist/mqtt.min.js"></script>
