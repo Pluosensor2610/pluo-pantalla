@@ -602,25 +602,29 @@
     return [...set].sort((a, b) => a - b);
   }
 
+  function sectoresRiegoDisponibles() {
+    const set = new Set();
+    for (const n in salidasInfo) {
+      if (salidasInfo[n].tipo === 'RIEGO') set.add(salidasInfo[n].sectorAsoc);
+    }
+    return [...set].sort((a, b) => a - b);
+  }
+
   function construirFilasSectoresPrograma() {
     const esAux = document.getElementById('progSeleccionado').value !== '0';
     const cont = document.getElementById('filasSectoresPrograma');
     cont.innerHTML = '';
 
-    // Aux1/Aux2: solo sectores con salida AUX asociada.
-    // Riego: todos MENOS los que tengan salida AUX asociada (esos son
-    // exclusivos de los auxiliares, Riego no debe poder tocarlos).
-    const sectoresAux = new Set(sectoresAuxDisponibles());
-    const sectoresAMostrar = esAux
-      ? [...sectoresAux]
-      : Array.from({length: MAX_SECTORES}, (_, i) => i).filter(s => !sectoresAux.has(s));
+    // Igual criterio para ambos: solo se muestran sectores que tengan una
+    // salida real asociada del tipo correspondiente -- RIEGO para el
+    // programa Riego, AUX para Aux1/Aux2. Un sector sin ninguna salida
+    // asignada no aparece en ninguno de los dos.
+    const sectoresAMostrar = esAux ? sectoresAuxDisponibles() : sectoresRiegoDisponibles();
 
-    if (esAux && sectoresAMostrar.length === 0) {
-      cont.innerHTML = '<p class="mensaje-cargando">No hay salidas tipo AUX configuradas. Configúralas en la sección de Salidas.</p>';
-      return;
-    }
-    if (!esAux && sectoresAMostrar.length === 0) {
-      cont.innerHTML = '<p class="mensaje-cargando">Todos los sectores están asignados a salidas auxiliares.</p>';
+    if (sectoresAMostrar.length === 0) {
+      cont.innerHTML = esAux
+        ? '<p class="mensaje-cargando">No hay salidas tipo AUX configuradas. Configúralas en la sección de Salidas.</p>'
+        : '<p class="mensaje-cargando">No hay salidas tipo RIEGO configuradas. Configúralas en la sección de Salidas.</p>';
       return;
     }
 
