@@ -428,6 +428,7 @@
     VALV_INY:  '#F5821F',
     AUX:       '#00B8A9'
   };
+  const COLOR_FERTILIZANDO = '#F5C800';
 
   const NOMBRE_POR_TIPO = {
     RIEGO:     'Sector de Riego',
@@ -834,11 +835,11 @@
         if (!est || !est.ejecutando) continue;
         if (i < 5) {
           if (info.tipo === 'RIEGO' && info.sectorAsoc === est.sector + 1) {
-            estado = est.pausado ? 'alerta' : 'activo';
+            estado = est.pausado ? 'alerta' : (est.estadoInterno >= 2 ? 'fertilizando' : 'activo');
             manejado = true; break;
           }
-          if (info.tipo === 'BOMBA_INY' && est.estadoInterno >= 2) { estado = 'activo'; manejado = true; break; }
-          if (info.tipo === 'VALV_INY' && est.estadoInterno >= 2) { estado = 'activo'; manejado = true; break; }
+          if (info.tipo === 'BOMBA_INY' && est.estadoInterno >= 2) { estado = 'fertilizando'; manejado = true; break; }
+          if (info.tipo === 'VALV_INY' && est.estadoInterno >= 2) { estado = 'fertilizando'; manejado = true; break; }
         } else {
           if (info.tipo === 'AUX' && info.sectorAsoc === est.sector + 1) { estado = 'activo'; manejado = true; break; }
         }
@@ -1215,12 +1216,17 @@
     const texto = document.getElementById(`estado-${n}`);
     if (!circulo || !texto) return;
 
-    let color = '#B9C2C6'; // gris (inactivo / sin datos)
+    let color = '#B9C2C6';
     let etiqueta = 'No activo';
+    let borde = 'none';
 
     if (estado === 'alerta') {
       color = '#E24C4C';
       etiqueta = 'Alerta';
+    } else if (estado === 'fertilizando') {
+      color = COLOR_FERTILIZANDO;
+      etiqueta = 'Fertilizando';
+      borde = '2px solid #222';
     } else if (estado === 'activo') {
       color = COLOR_POR_TIPO[tipo] || '#2FB65A';
       etiqueta = 'Activo';
@@ -1229,7 +1235,9 @@
     }
 
     circulo.style.background = color;
-    circulo.innerHTML = tipo ? generarIcono(tipo, color) : '';
+    circulo.style.border = borde;
+    circulo.innerHTML = tipo ? generarIcono(tipo, '#222') : '';
+    if (estado !== 'fertilizando') circulo.innerHTML = tipo ? generarIcono(tipo, color) : '';
     texto.textContent = etiqueta;
   }
 </script>
