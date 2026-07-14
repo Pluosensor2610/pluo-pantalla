@@ -428,7 +428,7 @@
     VALV_INY:  '#F5821F',
     AUX:       '#00B8A9'
   };
-  const COLOR_FERTILIZANDO = '#F5C800';
+  const COLOR_FERTILIZANDO = '#FFB800';
 
   const NOMBRE_POR_TIPO = {
     RIEGO:     'Sector de Riego',
@@ -1226,7 +1226,7 @@
     } else if (estado === 'fertilizando') {
       color = COLOR_FERTILIZANDO;
       etiqueta = 'Fertilizando';
-      borde = '2px solid #222';
+      borde = 'none';
     } else if (estado === 'activo') {
       color = COLOR_POR_TIPO[tipo] || '#2FB65A';
       etiqueta = 'Activo';
@@ -1236,8 +1236,11 @@
 
     circulo.style.background = color;
     circulo.style.border = borde;
-    circulo.innerHTML = tipo ? generarIcono(tipo, '#222') : '';
-    if (estado !== 'fertilizando') circulo.innerHTML = tipo ? generarIcono(tipo, color) : '';
+    if (estado === 'fertilizando') {
+      circulo.innerHTML = tipo ? generarIcono(tipo, '#1976D2') : '';
+    } else {
+      circulo.innerHTML = tipo ? generarIcono(tipo, color) : '';
+    }
     texto.textContent = etiqueta;
   }
 </script>
