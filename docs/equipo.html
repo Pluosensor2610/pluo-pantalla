@@ -341,7 +341,7 @@
           <option value="1">Riego 2</option>
           <option value="2">Riego 3</option>
           <option value="3">Riego 4</option>
-          <option value="4">Riego 5</option>
+          <option value="4">Riego Manual</option>
           <option value="5">Aux 1</option>
           <option value="6">Aux 2</option>
         </select>
@@ -493,61 +493,62 @@
 
   // --- Íconos por tipo (accent = color según estado, se pasa como parámetro) ---
 
-  function iconoValvula(accent) {
+  function iconoValvula(accent, cuerpo = 'white') {
     return `
       <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="30" y="4" width="4" height="10" fill="white"/>
-        <rect x="20" y="4" width="24" height="4" rx="1" fill="white"/>
-        <rect x="29" y="14" width="6" height="6" fill="white"/>
-        <rect x="22" y="26" width="20" height="16" rx="2" fill="white"/>
+        <rect x="30" y="4" width="4" height="10" fill="${cuerpo}"/>
+        <rect x="20" y="4" width="24" height="4" rx="1" fill="${cuerpo}"/>
+        <rect x="29" y="14" width="6" height="6" fill="${cuerpo}"/>
+        <rect x="22" y="26" width="20" height="16" rx="2" fill="${cuerpo}"/>
         <circle cx="32" cy="34" r="4" fill="${accent}"/>
-        <rect x="6" y="24" width="4" height="20" fill="white"/>
-        <rect x="10" y="28" width="4" height="12" fill="white"/>
-        <rect x="14" y="30" width="8" height="8" fill="white"/>
-        <rect x="54" y="24" width="4" height="20" fill="white"/>
-        <rect x="50" y="28" width="4" height="12" fill="white"/>
-        <rect x="42" y="30" width="8" height="8" fill="white"/>
+        <rect x="6" y="24" width="4" height="20" fill="${cuerpo}"/>
+        <rect x="10" y="28" width="4" height="12" fill="${cuerpo}"/>
+        <rect x="14" y="30" width="8" height="8" fill="${cuerpo}"/>
+        <rect x="54" y="24" width="4" height="20" fill="${cuerpo}"/>
+        <rect x="50" y="28" width="4" height="12" fill="${cuerpo}"/>
+        <rect x="42" y="30" width="8" height="8" fill="${cuerpo}"/>
       </svg>
     `;
   }
 
-  function iconoBomba(accent) {
+  function iconoBomba(accent, cuerpo = 'white') {
     return `
       <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="30" width="10" height="8" rx="1.5" fill="white"/>
-        <rect x="12" y="22" width="20" height="24" rx="2" fill="white"/>
+        <rect x="2" y="30" width="10" height="8" rx="1.5" fill="${cuerpo}"/>
+        <rect x="12" y="22" width="20" height="24" rx="2" fill="${cuerpo}"/>
         <rect x="16" y="27" width="12" height="2.4" fill="${accent}"/>
         <rect x="16" y="32" width="12" height="2.4" fill="${accent}"/>
         <rect x="16" y="37" width="12" height="2.4" fill="${accent}"/>
-        <circle cx="42" cy="34" r="15" fill="white"/>
+        <circle cx="42" cy="34" r="15" fill="${cuerpo}"/>
         <circle cx="42" cy="34" r="5" fill="${accent}"/>
-        <circle cx="42" cy="21" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
-        <circle cx="55" cy="34" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
-        <circle cx="42" cy="47" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
-        <circle cx="29" cy="34" r="2" fill="white" stroke="${accent}" stroke-width="1"/>
-        <rect x="50" y="6" width="8" height="10" rx="1.5" fill="white"/>
-        <rect x="49" y="14" width="10" height="6" fill="white"/>
-        <rect x="10" y="46" width="44" height="4" rx="1" fill="white"/>
-        <rect x="16" y="50" width="5" height="5" fill="white"/>
-        <rect x="43" y="50" width="5" height="5" fill="white"/>
+        <circle cx="42" cy="21" r="2" fill="${cuerpo}" stroke="${accent}" stroke-width="1"/>
+        <circle cx="55" cy="34" r="2" fill="${cuerpo}" stroke="${accent}" stroke-width="1"/>
+        <circle cx="42" cy="47" r="2" fill="${cuerpo}" stroke="${accent}" stroke-width="1"/>
+        <circle cx="29" cy="34" r="2" fill="${cuerpo}" stroke="${accent}" stroke-width="1"/>
+        <rect x="50" y="6" width="8" height="10" rx="1.5" fill="${cuerpo}"/>
+        <rect x="49" y="14" width="10" height="6" fill="${cuerpo}"/>
+        <rect x="10" y="46" width="44" height="4" rx="1" fill="${cuerpo}"/>
+        <rect x="16" y="50" width="5" height="5" fill="${cuerpo}"/>
+        <rect x="43" y="50" width="5" height="5" fill="${cuerpo}"/>
       </svg>
     `;
   }
 
-  function iconoAux() {
+  function iconoAux(cuerpo = 'white') {
     return `
       <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="24" cy="26" r="16" stroke="white" stroke-width="4" fill="none"/>
-        <path d="M24 6 L24 22" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="24" cy="26" r="16" stroke="${cuerpo}" stroke-width="4" fill="none"/>
+        <path d="M24 6 L24 22" stroke="${cuerpo}" stroke-width="4" stroke-linecap="round"/>
       </svg>
     `;
   }
 
-  function generarIcono(tipo, accent) {
-    if (tipo === 'RIEGO' || tipo === 'VALV_INY') return iconoValvula(accent);
-    if (tipo === 'BOMBA' || tipo === 'BOMBA_INY') return iconoBomba(accent);
-    if (tipo === 'AUX') return iconoAux();
-    return ''; // tipo desconocido / aún sin datos
+  function generarIcono(tipo, accent, cuerpo = 'white') {
+    if (tipo === 'RIEGO' || tipo === 'VALV_INY') return iconoValvula(accent, cuerpo);
+    if (tipo === 'BOMBA' || tipo === 'BOMBA_INY') return iconoBomba(accent, cuerpo);
+    if (tipo === 'AUX') return iconoAux(cuerpo);
+    return '';
+  }
   }
 
   function construirTarjetasSalidas(n) {
@@ -769,7 +770,7 @@
   // rota cada 10s entre los programas que estén realmente ejecutando
   // (Riego/Aux1/Aux2). Pausa y Saltar solo controlan Riego (idx 0).
   // ============================================================
-  const NOMBRES_PROGRAMA_WEB = ['Riego 1', 'Riego 2', 'Riego 3', 'Riego 4', 'Riego 5', 'Aux 1', 'Aux 2'];
+  const NOMBRES_PROGRAMA_WEB = ['Riego 1', 'Riego 2', 'Riego 3', 'Riego 4', 'Riego Manual', 'Aux 1', 'Aux 2'];
   const NUM_PROGRAMAS_WEB = NOMBRES_PROGRAMA_WEB.length;
   const ROTACION_WEB_MS = 10000;
   let estadosPrograma = {};   // {0:{...}, 1:{...}, 2:{...}} -- último EST: recibido de cada uno
@@ -1237,7 +1238,7 @@
     circulo.style.background = color;
     circulo.style.border = borde;
     if (estado === 'fertilizando') {
-      circulo.innerHTML = tipo ? generarIcono(tipo, '#1976D2') : '';
+      circulo.innerHTML = tipo ? generarIcono(tipo, COLOR_FERTILIZANDO, '#1976D2') : '';
     } else {
       circulo.innerHTML = tipo ? generarIcono(tipo, color) : '';
     }
