@@ -660,10 +660,12 @@
                 return;
             }
             const datos = encodeURIComponent(JSON.stringify({ tipo: tipo, ...payload }));
-            console.log('Sincronizando con:', SYNC_URL);
-            fetch(`${SYNC_URL}?datos=${datos}`, { method: 'GET', mode: 'no-cors' })
-                .then(() => console.log('✓ Solicitud de sincronización enviada (tipo: ' + tipo + ')'))
-                .catch(err => console.error('✗ Error de sincronización:', err));
+            const url = `${SYNC_URL}?datos=${datos}`;
+            console.log('Sincronizando con:', url);
+            const beacon = new Image();
+            beacon.onload = () => console.log('✓ Sincronización completada (tipo: ' + tipo + ')');
+            beacon.onerror = () => console.log('✓ Solicitud de sincronización enviada (tipo: ' + tipo + ')');
+            beacon.src = url;
         }
 
         function guardarConfiguracion() {
