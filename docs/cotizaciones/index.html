@@ -466,6 +466,19 @@
                 <div class="section-title">📋 Valores Guardados</div>
                 <div id="configMostrar" style="font-size: 13px;"></div>
             </div>
+
+            <div class="section" style="margin-top: 1.5rem;">
+                <div class="section-title">☁️ Respaldo en Google Sheets</div>
+                <p style="font-size: 12px; color: #666; margin-bottom: 0.75rem;">
+                    Pega aquí la URL de tu Google Apps Script para respaldar automáticamente clientes, productos y cotizaciones en tu planilla.
+                </p>
+                <div class="form-group">
+                    <label>URL del respaldo</label>
+                    <input type="url" id="configSyncUrl" placeholder="https://script.google.com/macros/s/.../exec">
+                </div>
+                <button class="btn-success" onclick="guardarSyncUrl()">✅ Guardar URL</button>
+                <div id="mensajeSyncUrl" style="margin-top: 1rem;"></div>
+            </div>
         </div>
     </div>
 
@@ -615,6 +628,36 @@
             vigencia: 30
         };
 
+        let SYNC_URL = localStorage.getItem('pluoSyncUrl') || '';
+
+        function guardarSyncUrl() {
+            const url = document.getElementById('configSyncUrl').value.trim();
+            SYNC_URL = url;
+            localStorage.setItem('pluoSyncUrl', url);
+            const msg = document.getElementById('mensajeSyncUrl');
+            if (msg) {
+                msg.innerHTML = url
+                    ? '<p style="color: #2e7d32;">✅ Respaldo en Google Sheets activado</p>'
+                    : '<p style="color: #666;">Respaldo desactivado</p>';
+                setTimeout(() => msg.innerHTML = '', 2500);
+            }
+        }
+
+        function cargarSyncUrl() {
+            const campo = document.getElementById('configSyncUrl');
+            if (campo) campo.value = SYNC_URL;
+        }
+
+        function sincronizarDato(tipo, payload) {
+            if (!SYNC_URL) return;
+            fetch(SYNC_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ tipo: tipo, ...payload })
+            }).catch(err => console.error('Error de sincronización:', err));
+        }
+
         function guardarConfiguracion() {
             CONFIG_VENTA = {
                 entrega: document.getElementById('configEntrega').value || CONFIG_VENTA.entrega,
@@ -678,6 +721,7 @@
             cargarProductos();
             cargarDelStorage();
             cargarConfiguracion();
+            cargarSyncUrl();
             cargarHistorial();
             document.getElementById('selectCliente').addEventListener('change', calcularTotales);
         }
@@ -815,7 +859,8 @@
             CLIENTES.push(nuevoCliente);
             guardarClientesEnStorage();
             actualizarSelectClientes();
-            
+            sincronizarDato('cliente', nuevoCliente);
+
             document.getElementById('nuevoClienteNombre').value = '';
             document.getElementById('nuevoClienteRut').value = '';
             document.getElementById('nuevoClienteContacto').value = '';
@@ -850,7 +895,8 @@
             PRODUCTOS.push(nuevoProducto);
             guardarProductosEnStorage();
             actualizarProductos();
-            
+            sincronizarDato('producto', nuevoProducto);
+
             document.getElementById('nuevoProductoCodigo').value = '';
             document.getElementById('nuevoProductoNombre').value = '';
             document.getElementById('nuevoProductoPrecio').value = '';
@@ -1169,7 +1215,20 @@
             
             historial.push(cotizacion);
             localStorage.setItem('pluoHistorial', JSON.stringify(historial));
-            
+
+            sincronizarDato('cotizacion', {
+                numero: cotizacion.id,
+                cliente: cotizacion.cliente,
+                rut: cotizacionActual.cliente.rut,
+                contacto: cotizacion.contacto,
+                neto: cotizacion.neto,
+                iva: cotizacion.iva,
+                total: cotizacion.total,
+                moneda: CONFIG_VENTA.moneda,
+                fecha: cotizacion.fecha,
+                hora: cotizacion.hora
+            });
+
             cargarHistorial();
         }
 
