@@ -931,14 +931,14 @@
             doc.text(`Contacto: ${datos.cliente.contacto}`, pageWidth / 2 + 5, y);
             y += 8;
 
-            const colX = [marginX, marginX + 28, marginX + 92, marginX + 107, marginX + 127, marginX + 152];
-            const colW = [28, 64, 15, 20, 25, tableRight - (marginX + 152)];
-            const lineH = 4;
+            const colX = [marginX, marginX + 34, marginX + 92, marginX + 107, marginX + 127, marginX + 152];
+            const colW = [34, 58, 15, 20, 25, tableRight - (marginX + 152)];
+            const lineH = 3.8;
             const rowPad = 2.5;
 
             function drawRow(cells, opts = {}) {
                 doc.setFont('helvetica', opts.bold ? 'bold' : 'normal');
-                doc.setFontSize(9);
+                doc.setFontSize(8);
 
                 const wrapped = cells.map((cell, i) => doc.splitTextToSize(String(cell), colW[i] - 2));
                 const maxLines = Math.max(1, ...wrapped.map(w => w.length));
