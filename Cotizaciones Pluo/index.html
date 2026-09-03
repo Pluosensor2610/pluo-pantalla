@@ -232,7 +232,7 @@
 
     <div class="card">
       <h2>Logo</h2>
-      <p class="hint">Aún no se ha cargado el logo definitivo. Pega aquí una imagen en base64 (data:image/...) o una URL pública, o sustituye directamente el archivo <code>logo.png</code> en esta carpeta.</p>
+      <p class="hint">Logo cargado desde <code>logo.png</code> (misma carpeta que esta app). Para reemplazarlo, sustituye ese archivo o pega aquí una imagen en base64 (data:image/...) o una URL pública.</p>
       <label>URL o data-URI del logo</label><input id="cfgLogo" placeholder="https://... o data:image/png;base64,...">
       <button class="btn secondary" id="btnGuardarLogo">Guardar logo</button>
     </div>
@@ -321,7 +321,7 @@ let productos = loadJSON(LS.productos, PRODUCTOS_BASE);
 let historial = loadJSON(LS.historial, []);
 let config = loadJSON(LS.config, {
   entrega:"Inmediata", plazoPago:"Al contado", moneda:"USD", vigencia:"7 días",
-  logo:"", sheetId:"1ASzSiG-64wpgw-MNpdqNEkkCRIQBIun5", apiKey:"",
+  logo:"logo.png", sheetId:"1ASzSiG-64wpgw-MNpdqNEkkCRIQBIun5", apiKey:"",
   rangoClientes:"Clientes!A2:E", rangoProductos:"Productos!A2:E", scriptUrl:""
 });
 
