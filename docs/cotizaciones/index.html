@@ -655,10 +655,15 @@
         }
 
         function sincronizarDato(tipo, payload) {
-            if (!SYNC_URL) return;
+            if (!SYNC_URL) {
+                console.log('Sincronización omitida: no hay URL configurada');
+                return;
+            }
             const datos = encodeURIComponent(JSON.stringify({ tipo: tipo, ...payload }));
+            console.log('Sincronizando con:', SYNC_URL);
             fetch(`${SYNC_URL}?datos=${datos}`, { method: 'GET', mode: 'no-cors' })
-                .catch(err => console.error('Error de sincronización:', err));
+                .then(() => console.log('✓ Solicitud de sincronización enviada (tipo: ' + tipo + ')'))
+                .catch(err => console.error('✗ Error de sincronización:', err));
         }
 
         function guardarConfiguracion() {
@@ -885,7 +890,7 @@
                 document.getElementById('nuevoClienteEmail').value = '';
                 document.getElementById('nuevoClienteTelefono').value = '';
 
-                mostrarMensajeCliente('✅ Cliente agregado exitosamente', 'success');
+                mostrarMensajeCliente('✅ Cliente agregado exitosamente' + (SYNC_URL ? ' (enviado a Sheets)' : ' (sin respaldo configurado)'), 'success');
             }
             mostrarListasGuardadas();
         }
