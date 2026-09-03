@@ -1000,6 +1000,7 @@
             element.style.position = 'fixed';
             element.style.left = '-9999px';
             element.style.top = '0';
+            element.style.width = '800px';
             document.body.appendChild(element);
             try {
                 const blob = await html2pdf().set(pdfData.opt).from(element).outputPdf('blob');
@@ -1129,6 +1130,7 @@
                 element.style.position = 'fixed';
                 element.style.left = '-9999px';
                 element.style.top = '0';
+                element.style.width = '800px';
                 document.body.appendChild(element);
                 html2pdf()
                     .set(cot.pdfData.opt)
@@ -1209,6 +1211,7 @@
                 element.style.position = 'fixed';
                 element.style.left = '-9999px';
                 element.style.top = '0';
+                element.style.width = '800px';
                 document.body.appendChild(element);
                 html2pdf()
                     .set(pdfGenerado.opt)
