@@ -995,19 +995,8 @@
         }
 
         async function generarBlobPDF(pdfData) {
-            const element = document.createElement('div');
-            element.innerHTML = pdfData.html;
-            element.style.position = 'fixed';
-            element.style.left = '-9999px';
-            element.style.top = '0';
-            element.style.width = '800px';
-            document.body.appendChild(element);
-            try {
-                const blob = await html2pdf().set(pdfData.opt).from(element).outputPdf('blob');
-                return new File([blob], pdfData.opt.filename, { type: 'application/pdf' });
-            } finally {
-                document.body.removeChild(element);
-            }
+            const blob = await html2pdf().set(pdfData.opt).from(pdfData.html).outputPdf('blob');
+            return new File([blob], pdfData.opt.filename, { type: 'application/pdf' });
         }
 
         async function compartirPDF(pdfData) {
@@ -1125,19 +1114,11 @@
             const cot = historialReverse[idx];
             
             if (cot && cot.pdfData) {
-                const element = document.createElement('div');
-                element.innerHTML = cot.pdfData.html;
-                element.style.position = 'fixed';
-                element.style.left = '-9999px';
-                element.style.top = '0';
-                element.style.width = '800px';
-                document.body.appendChild(element);
                 html2pdf()
                     .set(cot.pdfData.opt)
-                    .from(element)
+                    .from(cot.pdfData.html)
                     .save()
-                    .catch(err => console.error('Error PDF:', err))
-                    .finally(() => document.body.removeChild(element));
+                    .catch(err => console.error('Error PDF:', err));
             }
         }
 
@@ -1206,19 +1187,11 @@
 
         function descargarPDF() {
             if (pdfGenerado) {
-                const element = document.createElement('div');
-                element.innerHTML = pdfGenerado.html;
-                element.style.position = 'fixed';
-                element.style.left = '-9999px';
-                element.style.top = '0';
-                element.style.width = '800px';
-                document.body.appendChild(element);
                 html2pdf()
                     .set(pdfGenerado.opt)
-                    .from(element)
+                    .from(pdfGenerado.html)
                     .save()
-                    .catch(err => console.error('Error PDF:', err))
-                    .finally(() => document.body.removeChild(element));
+                    .catch(err => console.error('Error PDF:', err));
             }
         }
 
