@@ -997,8 +997,16 @@
         async function generarBlobPDF(pdfData) {
             const element = document.createElement('div');
             element.innerHTML = pdfData.html;
-            const blob = await html2pdf().set(pdfData.opt).from(element).outputPdf('blob');
-            return new File([blob], pdfData.opt.filename, { type: 'application/pdf' });
+            element.style.position = 'fixed';
+            element.style.left = '-9999px';
+            element.style.top = '0';
+            document.body.appendChild(element);
+            try {
+                const blob = await html2pdf().set(pdfData.opt).from(element).outputPdf('blob');
+                return new File([blob], pdfData.opt.filename, { type: 'application/pdf' });
+            } finally {
+                document.body.removeChild(element);
+            }
         }
 
         async function compartirPDF(pdfData) {
@@ -1118,11 +1126,16 @@
             if (cot && cot.pdfData) {
                 const element = document.createElement('div');
                 element.innerHTML = cot.pdfData.html;
+                element.style.position = 'fixed';
+                element.style.left = '-9999px';
+                element.style.top = '0';
+                document.body.appendChild(element);
                 html2pdf()
                     .set(cot.pdfData.opt)
                     .from(element)
                     .save()
-                    .catch(err => console.error('Error PDF:', err));
+                    .catch(err => console.error('Error PDF:', err))
+                    .finally(() => document.body.removeChild(element));
             }
         }
 
@@ -1193,11 +1206,16 @@
             if (pdfGenerado) {
                 const element = document.createElement('div');
                 element.innerHTML = pdfGenerado.html;
+                element.style.position = 'fixed';
+                element.style.left = '-9999px';
+                element.style.top = '0';
+                document.body.appendChild(element);
                 html2pdf()
                     .set(pdfGenerado.opt)
                     .from(element)
                     .save()
-                    .catch(err => console.error('Error PDF:', err));
+                    .catch(err => console.error('Error PDF:', err))
+                    .finally(() => document.body.removeChild(element));
             }
         }
 
