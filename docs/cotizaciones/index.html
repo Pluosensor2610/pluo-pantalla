@@ -981,7 +981,7 @@
                 margin: 5,
                 filename: `Cot_${anio}-${numeroConvo}_${cotizacionActual.cliente.empresa}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 1.5 },
+                html2canvas: { scale: 1, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', imageTimeout: 30000 },
                 jsPDF: { orientation: 'portrait', unit: 'mm', format: [215.9, 279.4] }
             };
 
@@ -1191,7 +1191,10 @@
                     .set(pdfGenerado.opt)
                     .from(pdfGenerado.html)
                     .save()
-                    .catch(err => console.error('Error PDF:', err));
+                    .catch(err => {
+                        console.error('Error PDF:', err);
+                        mostrarMensaje('Error al generar PDF: ' + err.message, 'error');
+                    });
             }
         }
 
