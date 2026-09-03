@@ -513,7 +513,10 @@
                     <input type="tel" id="nuevoClienteTelefono" placeholder="+56912345678">
                 </div>
 
-                <button class="btn-success" onclick="agregarClienteNuevo()">✅ Guardar Cliente</button>
+                <div class="botones">
+                    <button class="btn-success" id="btnGuardarCliente" onclick="agregarClienteNuevo()">✅ Guardar Cliente</button>
+                    <button class="btn-secondary" id="btnCancelarCliente" onclick="cancelarEdicionCliente()" style="display: none;">✕ Cancelar</button>
+                </div>
                 <div id="mensajeCliente" style="margin-top: 1rem;"></div>
             </div>
 
@@ -556,7 +559,10 @@
                     <input type="text" id="nuevoProductoLinea" placeholder="Ej: Electrónico">
                 </div>
 
-                <button class="btn-success" onclick="agregarProductoNuevo()">✅ Guardar Producto</button>
+                <div class="botones">
+                    <button class="btn-success" id="btnGuardarProducto" onclick="agregarProductoNuevo()">✅ Guardar Producto</button>
+                    <button class="btn-secondary" id="btnCancelarProducto" onclick="cancelarEdicionProducto()" style="display: none;">✕ Cancelar</button>
+                </div>
                 <div id="mensajeProducto" style="margin-top: 1rem;"></div>
             </div>
 
@@ -835,6 +841,9 @@
             };
         }
 
+        let editandoClienteId = null;
+        let editandoProductoId = null;
+
         function agregarClienteNuevo() {
             const nombre = document.getElementById('nuevoClienteNombre').value.trim();
             const rut = document.getElementById('nuevoClienteRut').value.trim();
@@ -847,27 +856,75 @@
                 return;
             }
 
-            const nuevoCliente = {
-                id: Date.now(),
-                empresa: nombre,
-                rut: rut,
-                contacto: contacto,
-                email: email,
-                telefono: telefono
-            };
+            if (editandoClienteId !== null) {
+                const cliente = CLIENTES.find(c => c.id === editandoClienteId);
+                cliente.empresa = nombre;
+                cliente.rut = rut;
+                cliente.contacto = contacto;
+                cliente.email = email;
+                cliente.telefono = telefono;
+                guardarClientesEnStorage();
+                actualizarSelectClientes();
+                sincronizarDato('cliente', cliente);
+                mostrarMensajeCliente('✅ Cliente actualizado exitosamente', 'success');
+                cancelarEdicionCliente();
+            } else {
+                const nuevoCliente = {
+                    id: Date.now(),
+                    empresa: nombre,
+                    rut: rut,
+                    contacto: contacto,
+                    email: email,
+                    telefono: telefono
+                };
+                CLIENTES.push(nuevoCliente);
+                guardarClientesEnStorage();
+                actualizarSelectClientes();
+                sincronizarDato('cliente', nuevoCliente);
 
-            CLIENTES.push(nuevoCliente);
-            guardarClientesEnStorage();
-            actualizarSelectClientes();
-            sincronizarDato('cliente', nuevoCliente);
+                document.getElementById('nuevoClienteNombre').value = '';
+                document.getElementById('nuevoClienteRut').value = '';
+                document.getElementById('nuevoClienteContacto').value = '';
+                document.getElementById('nuevoClienteEmail').value = '';
+                document.getElementById('nuevoClienteTelefono').value = '';
 
+                mostrarMensajeCliente('✅ Cliente agregado exitosamente', 'success');
+            }
+            mostrarListasGuardadas();
+        }
+
+        function editarCliente(id) {
+            const cliente = CLIENTES.find(c => c.id === id);
+            if (!cliente) return;
+            editandoClienteId = id;
+            document.getElementById('nuevoClienteNombre').value = cliente.empresa;
+            document.getElementById('nuevoClienteRut').value = cliente.rut;
+            document.getElementById('nuevoClienteContacto').value = cliente.contacto;
+            document.getElementById('nuevoClienteEmail').value = cliente.email || '';
+            document.getElementById('nuevoClienteTelefono').value = cliente.telefono || '';
+            document.getElementById('btnGuardarCliente').textContent = '💾 Guardar Cambios';
+            document.getElementById('btnCancelarCliente').style.display = '';
+            document.getElementById('nuevoClienteNombre').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function cancelarEdicionCliente() {
+            editandoClienteId = null;
             document.getElementById('nuevoClienteNombre').value = '';
             document.getElementById('nuevoClienteRut').value = '';
             document.getElementById('nuevoClienteContacto').value = '';
             document.getElementById('nuevoClienteEmail').value = '';
             document.getElementById('nuevoClienteTelefono').value = '';
+            document.getElementById('btnGuardarCliente').textContent = '✅ Guardar Cliente';
+            document.getElementById('btnCancelarCliente').style.display = 'none';
+        }
 
-            mostrarMensajeCliente('✅ Cliente agregado exitosamente', 'success');
+        function eliminarClienteNuevo(id) {
+            if (!confirm('¿Eliminar este cliente?')) return;
+            CLIENTES = CLIENTES.filter(c => c.id !== id);
+            guardarClientesEnStorage();
+            actualizarSelectClientes();
+            if (editandoClienteId === id) cancelarEdicionCliente();
+            mostrarMensajeCliente('✓ Cliente eliminado', 'success');
             mostrarListasGuardadas();
         }
 
@@ -883,27 +940,75 @@
                 return;
             }
 
-            const nuevoProducto = {
-                id: Date.now(),
-                codigo: codigo,
-                nombre: nombre,
-                precio: precio,
-                descuento: descuento,
-                linea: linea
-            };
+            if (editandoProductoId !== null) {
+                const producto = PRODUCTOS.find(p => p.id === editandoProductoId);
+                producto.codigo = codigo;
+                producto.nombre = nombre;
+                producto.precio = precio;
+                producto.descuento = descuento;
+                producto.linea = linea;
+                guardarProductosEnStorage();
+                actualizarProductos();
+                sincronizarDato('producto', producto);
+                mostrarMensajeProducto('✅ Producto actualizado exitosamente', 'success');
+                cancelarEdicionProducto();
+            } else {
+                const nuevoProducto = {
+                    id: Date.now(),
+                    codigo: codigo,
+                    nombre: nombre,
+                    precio: precio,
+                    descuento: descuento,
+                    linea: linea
+                };
+                PRODUCTOS.push(nuevoProducto);
+                guardarProductosEnStorage();
+                actualizarProductos();
+                sincronizarDato('producto', nuevoProducto);
 
-            PRODUCTOS.push(nuevoProducto);
-            guardarProductosEnStorage();
-            actualizarProductos();
-            sincronizarDato('producto', nuevoProducto);
+                document.getElementById('nuevoProductoCodigo').value = '';
+                document.getElementById('nuevoProductoNombre').value = '';
+                document.getElementById('nuevoProductoPrecio').value = '';
+                document.getElementById('nuevoProductoDescuento').value = '';
+                document.getElementById('nuevoProductoLinea').value = '';
 
+                mostrarMensajeProducto('✅ Producto agregado exitosamente', 'success');
+            }
+            mostrarListasGuardadas();
+        }
+
+        function editarProducto(id) {
+            const producto = PRODUCTOS.find(p => p.id === id);
+            if (!producto) return;
+            editandoProductoId = id;
+            document.getElementById('nuevoProductoCodigo').value = producto.codigo;
+            document.getElementById('nuevoProductoNombre').value = producto.nombre;
+            document.getElementById('nuevoProductoPrecio').value = producto.precio;
+            document.getElementById('nuevoProductoDescuento').value = producto.descuento;
+            document.getElementById('nuevoProductoLinea').value = producto.linea || '';
+            document.getElementById('btnGuardarProducto').textContent = '💾 Guardar Cambios';
+            document.getElementById('btnCancelarProducto').style.display = '';
+            document.getElementById('nuevoProductoCodigo').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function cancelarEdicionProducto() {
+            editandoProductoId = null;
             document.getElementById('nuevoProductoCodigo').value = '';
             document.getElementById('nuevoProductoNombre').value = '';
             document.getElementById('nuevoProductoPrecio').value = '';
             document.getElementById('nuevoProductoDescuento').value = '';
             document.getElementById('nuevoProductoLinea').value = '';
+            document.getElementById('btnGuardarProducto').textContent = '✅ Guardar Producto';
+            document.getElementById('btnCancelarProducto').style.display = 'none';
+        }
 
-            mostrarMensajeProducto('✅ Producto agregado exitosamente', 'success');
+        function eliminarProductoNuevo(id) {
+            if (!confirm('¿Eliminar este producto?')) return;
+            PRODUCTOS = PRODUCTOS.filter(p => p.id !== id);
+            guardarProductosEnStorage();
+            actualizarProductos();
+            if (editandoProductoId === id) cancelarEdicionProducto();
+            mostrarMensajeProducto('✓ Producto eliminado', 'success');
             mostrarListasGuardadas();
         }
 
@@ -923,11 +1028,17 @@
 
             const divClientes = document.getElementById('listaClientesNuevos');
             if (clientesNuevos.length > 0) {
-                divClientes.innerHTML = clientesNuevos.map(c => 
-                    `<p style="padding:8px; background:#f0f7ff; border-radius:6px; margin-bottom:6px;">
-                        <strong>${c.empresa}</strong><br>
-                        <small>${c.rut} | ${c.contacto}</small>
-                    </p>`
+                divClientes.innerHTML = clientesNuevos.map(c =>
+                    `<div style="padding:8px; background:#f0f7ff; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                        <div>
+                            <strong>${c.empresa}</strong><br>
+                            <small>${c.rut} | ${c.contacto}</small>
+                        </div>
+                        <div style="display:flex; gap:6px; flex-shrink:0;">
+                            <button class="btn-secondary btn-small" onclick="editarCliente(${c.id})">✏️</button>
+                            <button class="btn-secondary btn-small" onclick="eliminarClienteNuevo(${c.id})" style="color:#c62828; border-color:#c62828;">🗑️</button>
+                        </div>
+                    </div>`
                 ).join('');
             } else {
                 divClientes.innerHTML = '<p style="color:#999;">Sin clientes nuevos agregados</p>';
@@ -935,11 +1046,17 @@
 
             const divProductos = document.getElementById('listaProductosNuevos');
             if (productosNuevos.length > 0) {
-                divProductos.innerHTML = productosNuevos.map(p => 
-                    `<p style="padding:8px; background:#f0f7ff; border-radius:6px; margin-bottom:6px;">
-                        <strong>${p.nombre}</strong><br>
-                        <small>${p.codigo} | USD ${p.precio.toFixed(2)}${p.descuento > 0 ? ` (${p.descuento}% desc)` : ''}</small>
-                    </p>`
+                divProductos.innerHTML = productosNuevos.map(p =>
+                    `<div style="padding:8px; background:#f0f7ff; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                        <div>
+                            <strong>${p.nombre}</strong><br>
+                            <small>${p.codigo} | USD ${p.precio.toFixed(2)}${p.descuento > 0 ? ` (${p.descuento}% desc)` : ''}</small>
+                        </div>
+                        <div style="display:flex; gap:6px; flex-shrink:0;">
+                            <button class="btn-secondary btn-small" onclick="editarProducto(${p.id})">✏️</button>
+                            <button class="btn-secondary btn-small" onclick="eliminarProductoNuevo(${p.id})" style="color:#c62828; border-color:#c62828;">🗑️</button>
+                        </div>
+                    </div>`
                 ).join('');
             } else {
                 divProductos.innerHTML = '<p style="color:#999;">Sin productos nuevos agregados</p>';
