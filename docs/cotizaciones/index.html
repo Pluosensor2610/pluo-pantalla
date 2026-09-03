@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PLUO Cotiza">
+<title>PLUO Cotizaciones</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --azul:#0b3d66;
+    --azul2:#12578c;
+    --gris:#f4f6f8;
+    --borde:#dbe2e8;
+    --texto:#1b2733;
+    --ok:#1f8a4c;
+    --rojo:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--gris);color:var(--texto);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  header{
+    background:var(--azul);color:#fff;padding:14px 16px calc(14px + env(safe-area-inset-top)) 16px;
+    padding-top:calc(14px + env(safe-area-inset-top));
+    display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:20;
+  }
+  .logo-wrap{width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;}
+  .logo-wrap img{width:100%;height:100%;object-fit:contain;}
+  .logo-fallback{font-weight:700;color:var(--azul);font-size:14px;}
+  header h1{font-size:16px;margin:0;font-weight:600;}
+  header small{display:block;font-size:11px;opacity:.8;}
+
+  nav.tabs{
+    display:flex;overflow-x:auto;background:#fff;border-bottom:1px solid var(--borde);
+    position:sticky;top:64px;z-index:19;-webkit-overflow-scrolling:touch;
+  }
+  nav.tabs button{
+    flex:none;padding:11px 14px;border:none;background:none;font-size:13px;color:#5a6a78;
+    border-bottom:3px solid transparent;white-space:nowrap;
+  }
+  nav.tabs button.active{color:var(--azul);border-color:var(--azul);font-weight:600;}
+
+  main{padding:14px;max-width:720px;margin:0 auto;}
+  .card{background:#fff;border:1px solid var(--borde);border-radius:10px;padding:14px;margin-bottom:14px;}
+  .card h2{font-size:14px;margin:0 0 10px 0;color:var(--azul);}
+  label{display:block;font-size:12px;color:#5a6a78;margin-bottom:4px;margin-top:10px;}
+  select,input,textarea{
+    width:100%;padding:9px 10px;border:1px solid var(--borde);border-radius:8px;font-size:14px;
+    background:#fff;color:var(--texto);
+  }
+  textarea{resize:vertical;min-height:60px;}
+  .btn{
+    display:inline-block;padding:10px 16px;border-radius:8px;border:none;background:var(--azul);
+    color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:10px;margin-right:8px;
+  }
+  .btn.secondary{background:#fff;color:var(--azul);border:1px solid var(--azul);}
+  .btn.danger{background:var(--rojo);}
+  .btn.ok{background:var(--ok);}
+  .btn:disabled{opacity:.5;}
+  .row-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:8px 6px;border-bottom:1px solid var(--borde);text-align:left;vertical-align:middle;}
+  th{color:#5a6a78;font-weight:600;font-size:11px;text-transform:uppercase;}
+  .prod-nombre{font-weight:600;}
+  .prod-code{color:#8291a0;font-size:11px;}
+  input.qty{width:56px;text-align:center;}
+  input.desc{width:56px;text-align:center;}
+
+  .totales{margin-top:6px;}
+  .totales div{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;}
+  .totales .final{font-size:16px;font-weight:700;color:var(--azul);border-top:1px solid var(--borde);padding-top:8px;margin-top:4px;}
+
+  .hist-item{border-bottom:1px solid var(--borde);padding:10px 0;}
+  .hist-item:last-child{border-bottom:none;}
+  .hist-top{display:flex;justify-content:space-between;font-weight:600;font-size:13px;}
+  .hist-sub{font-size:12px;color:#5a6a78;margin-top:2px;}
+  .hist-actions{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;}
+  .hist-actions button{
+    font-size:12px;padding:6px 10px;border-radius:6px;border:1px solid var(--borde);background:#fff;color:var(--azul);
+  }
+  .hist-actions button.del{color:var(--rojo);border-color:var(--rojo);}
+
+  .empty{color:#8291a0;font-size:13px;text-align:center;padding:20px 0;}
+  .toast{
+    position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+    background:#1b2733;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:99;
+    opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center;
+  }
+  .toast.show{opacity:1;}
+  .hint{font-size:11px;color:#8291a0;margin-top:4px;}
+  fieldset{border:1px solid var(--borde);border-radius:8px;margin-top:10px;padding:10px;}
+  legend{font-size:12px;color:var(--azul);font-weight:600;padding:0 4px;}
+
+  /* PDF layout, offscreen */
+  #pdf-render{position:fixed;left:-9999px;top:0;width:215.9mm;background:#fff;color:#1b2733;font-family:Arial,Helvetica,sans-serif;}
+  .pdf-header{display:flex;align-items:center;gap:14px;border-bottom:3px solid var(--azul);padding-bottom:14px;margin-bottom:16px;}
+  .pdf-logo{width:60px;height:60px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .pdf-logo img{width:100%;height:100%;object-fit:contain;}
+  .pdf-empresa{font-size:11px;line-height:1.4;color:#333;}
+  .pdf-titulo{margin-left:auto;text-align:right;}
+  .pdf-titulo h2{margin:0;color:var(--azul);}
+  .pdf-info-grid{display:flex;justify-content:space-between;font-size:12px;margin-bottom:14px;gap:20px;}
+  .pdf-info-grid div{flex:1;}
+  .pdf-info-grid b{display:block;color:var(--azul);margin-bottom:4px;font-size:11px;text-transform:uppercase;}
+  table.pdf-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px;}
+  table.pdf-table th{background:var(--azul);color:#fff;padding:6px;text-align:left;}
+  table.pdf-table td{padding:6px;border-bottom:1px solid #ddd;}
+  .pdf-totales{width:260px;margin-left:auto;font-size:12px;}
+  .pdf-totales div{display:flex;justify-content:space-between;padding:3px 0;}
+  .pdf-totales .final{font-weight:700;font-size:14px;border-top:2px solid var(--azul);padding-top:6px;color:var(--azul);}
+  .pdf-condiciones{margin-top:16px;font-size:11px;border-top:1px solid #ddd;padding-top:10px;}
+  .pdf-condiciones b{color:var(--azul);}
+  .pdf-footer{margin-top:20px;font-size:10px;color:#777;text-align:center;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap" id="logoWrap"><span class="logo-fallback">PLUO</span></div>
+  <div>
+    <h1>PLUO Cotizaciones</h1>
+    <small>PWA para iPhone</small>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button data-tab="cotizacion" class="active">Cotización</button>
+  <button data-tab="historial">Historial</button>
+  <button data-tab="cliente">Cliente Nuevo</button>
+  <button data-tab="producto">Producto Nuevo</button>
+  <button data-tab="config">⚙️ Configuración</button>
+</nav>
+
+<main>
+
+  <!-- COTIZACION -->
+  <section id="tab-cotizacion" class="tab">
+    <div class="card">
+      <h2>Cliente</h2>
+      <label for="selCliente">Seleccionar cliente</label>
+      <select id="selCliente"></select>
+      <div class="hint" id="clienteInfo"></div>
+    </div>
+
+    <div class="card">
+      <h2>Productos</h2>
+      <table>
+        <thead><tr><th></th><th>Producto</th><th>Cant.</th><th>Desc %</th></tr></thead>
+        <tbody id="tblProductos"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Totales</h2>
+      <div class="totales" id="totales">
+        <div><span>Neto</span><span id="totNeto">USD 0.00</span></div>
+        <div><span>IVA (19%)</span><span id="totIva">USD 0.00</span></div>
+        <div class="final"><span>Total</span><span id="totFinal">USD 0.00</span></div>
+      </div>
+      <button class="btn" id="btnGenerar">Generar Cotización</button>
+    </div>
+
+    <div class="card" id="postGenerar" style="display:none;">
+      <h2>Cotización <span id="numGenerada"></span></h2>
+      <div class="row-actions">
+        <button class="btn secondary" id="btnVerPdf">👁️ Ver PDF</button>
+        <button class="btn secondary" id="btnDescargar">⬇️ Descargar</button>
+        <button class="btn secondary" id="btnEmail">✉️ Email</button>
+        <button class="btn secondary" id="btnWhatsapp">💬 WhatsApp</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORIAL -->
+  <section id="tab-historial" class="tab" style="display:none;">
+    <div class="card">
+      <h2>Historial de cotizaciones</h2>
+      <div class="row-actions">
+        <button class="btn secondary" id="btnExportCsv">📤 Exportar CSV</button>
+        <button class="btn danger" id="btnLimpiarHist">🗑️ Limpiar todo</button>
+      </div>
+      <div id="listaHistorial"></div>
+    </div>
+  </section>
+
+  <!-- CLIENTE NUEVO -->
+  <section id="tab-cliente" class="tab" style="display:none;">
+    <div class="card">
+      <h2>Nuevo cliente</h2>
+      <label>Nombre</label><input id="cliNombre">
+      <label>RUT</label><input id="cliRut">
+      <label>Contacto</label><input id="cliContacto">
+      <label>Email</label><input id="cliEmail" type="email">
+      <label>Teléfono</label><input id="cliTelefono">
+      <button class="btn" id="btnGuardarCliente">Guardar cliente</button>
+    </div>
+  </section>
+
+  <!-- PRODUCTO NUEVO -->
+  <section id="tab-producto" class="tab" style="display:none;">
+    <div class="card">
+      <h2>Nuevo producto</h2>
+      <label>Código SKU</label><input id="prodCodigo">
+      <label>Nombre</label><input id="prodNombre">
+      <label>Precio USD</label><input id="prodPrecio" type="number" step="0.01">
+      <label>Descuento %</label><input id="prodDescuento" type="number" step="0.01" value="0">
+      <label>Línea</label><input id="prodLinea">
+      <button class="btn" id="btnGuardarProducto">Guardar producto</button>
+    </div>
+  </section>
+
+  <!-- CONFIGURACION -->
+  <section id="tab-config" class="tab" style="display:none;">
+    <div class="card">
+      <h2>Condiciones de venta</h2>
+      <label>Entrega</label><input id="cfgEntrega" placeholder="Ej. Inmediata / 15 días">
+      <label>Plazo de pago</label><input id="cfgPlazoPago" placeholder="Ej. Al contado / 30 días neto">
+      <label>Moneda</label>
+      <select id="cfgMoneda">
+        <option value="USD">USD</option>
+        <option value="CLP">CLP</option>
+      </select>
+      <label>Vigencia de la cotización</label><input id="cfgVigencia" placeholder="Ej. 7 días / 30 días">
+      <button class="btn" id="btnGuardarConfig">Guardar condiciones</button>
+    </div>
+
+    <div class="card">
+      <h2>Logo</h2>
+      <p class="hint">Logo cargado desde <code>logo.png</code> (misma carpeta que esta app). Para reemplazarlo, sustituye ese archivo o pega aquí una imagen en base64 (data:image/...) o una URL pública.</p>
+      <label>URL o data-URI del logo</label><input id="cfgLogo" placeholder="https://... o data:image/png;base64,...">
+      <button class="btn secondary" id="btnGuardarLogo">Guardar logo</button>
+    </div>
+
+    <div class="card">
+      <h2>Google Sheets — Catálogo (lectura)</h2>
+      <p class="hint">Clientes y productos se pueden sincronizar leyendo un Google Sheet público vía Sheets API + API Key. Requiere que el Sheet tenga permisos de "Cualquiera con el enlace puede ver".</p>
+      <label>ID del Google Sheet</label>
+      <input id="cfgSheetId" placeholder="1ASzSiG-64wpgw-MNpdqNEkkCRIQBIun5" value="1ASzSiG-64wpgw-MNpdqNEkkCRIQBIun5">
+      <label>API Key (Google Cloud, Sheets API habilitada)</label>
+      <input id="cfgApiKey" placeholder="Pega aquí tu API Key">
+      <label>Rango Clientes (hoja!rango)</label>
+      <input id="cfgRangoClientes" placeholder="Clientes!A2:E" value="Clientes!A2:E">
+      <label>Rango Productos (hoja!rango)</label>
+      <input id="cfgRangoProductos" placeholder="Productos!A2:E" value="Productos!A2:E">
+      <div class="row-actions">
+        <button class="btn secondary" id="btnGuardarSheets">Guardar</button>
+        <button class="btn ok" id="btnSincronizar">🔄 Sincronizar ahora</button>
+      </div>
+      <div class="hint" id="syncStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>Google Apps Script — Guardar cotizaciones</h2>
+      <p class="hint">Una API Key sola no permite escribir en Sheets. Publica un Google Apps Script vinculado al Sheet como "Web App" (acceso: cualquiera) que reciba un POST y agregue la fila. Pega aquí la URL del Web App para que cada cotización generada se envíe automáticamente además de guardarse en el iPhone.</p>
+      <label>URL del Apps Script Web App</label>
+      <input id="cfgScriptUrl" placeholder="https://script.google.com/macros/s/XXXX/exec">
+      <button class="btn secondary" id="btnGuardarScript">Guardar</button>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- Plantilla oculta para PDF -->
+<div id="pdf-render"></div>
+
+<script>
+/* ======================= DATOS BASE ======================= */
+const EMPRESA = {
+  nombre:"PLUO SPA", rut:"77.538.863-3", direccion:"Bellinzona 4844, Lo Barnechea, Santiago",
+  gerente:"Octavio Mujica E.", email:"octaviom@pluo.cl", telefono:"+56974768988"
+};
+
+const CLIENTES_BASE = [
+  {nombre:"AGRICOLA LA ISLA LIMITADA", rut:"76401556-8", contacto:"", email:"", telefono:""},
+  {nombre:"AK INNOVACIÓN Y CONTROL SPA", rut:"77007787-7", contacto:"", email:"", telefono:""},
+  {nombre:"SERGIO PACHECO Y CIA LTDA", rut:"77117090-0", contacto:"", email:"", telefono:""},
+  {nombre:"Agricola Lihueimo", rut:"77.104.629-0", contacto:"", email:"", telefono:""},
+  {nombre:"SOC. TEC. CLEAN WATER LIMITADA", rut:"77.453.574-8", contacto:"", email:"", telefono:""},
+  {nombre:"AGRICOLA SANTA CLEMENTINA", rut:"76172140-2", contacto:"", email:"", telefono:""},
+  {nombre:"COSMOPLAS S A", rut:"81187800-6", contacto:"", email:"", telefono:""},
+  {nombre:"Casas Viejas SPA", rut:"76727379-7", contacto:"", email:"", telefono:""},
+  {nombre:"AGRICOLA CLARO DE LUNA", rut:"99.544.090-3", contacto:"", email:"", telefono:""}
+];
+
+const PRODUCTOS_BASE = [
+  {codigo:"PLU001", nombre:"Pluo 1", precio:550, descuento:0, linea:""},
+  {codigo:"KIT002", nombre:"Kit Radio", precio:750, descuento:15, linea:""},
+  {codigo:"RTU001", nombre:"RTU", precio:595, descuento:15, linea:""},
+  {codigo:"PLA003", nombre:"Placa Ampliación", precio:400, descuento:0, linea:""},
+  {codigo:"PLC012SALCP", nombre:"Programador Pluo Compact 12", precio:850, descuento:5, linea:""},
+  {codigo:"SRV001", nombre:"Instalación y capacitación", precio:250, descuento:0, linea:""}
+];
+
+/* ======================= ESTADO / STORAGE ======================= */
+const LS = {
+  clientes:"pluo_clientes",
+  productos:"pluo_productos",
+  historial:"pluo_historial",
+  config:"pluo_config",
+  contador:"pluo_contador"
+};
+
+function loadJSON(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){ return fallback; }
+}
+function saveJSON(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+let clientes = loadJSON(LS.clientes, CLIENTES_BASE);
+let productos = loadJSON(LS.productos, PRODUCTOS_BASE);
+let historial = loadJSON(LS.historial, []);
+let config = loadJSON(LS.config, {
+  entrega:"Inmediata", plazoPago:"Al contado", moneda:"USD", vigencia:"7 días",
+  logo:"logo.png", sheetId:"1ASzSiG-64wpgw-MNpdqNEkkCRIQBIun5", apiKey:"",
+  rangoClientes:"Clientes!A2:E", rangoProductos:"Productos!A2:E", scriptUrl:""
+});
+
+let cotizacionActual = null;
+
+/* ======================= UTILIDADES ======================= */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function fmtMoneda(n){
+  const mon = config.moneda || "USD";
+  return mon + " " + Number(n||0).toLocaleString('es-CL', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function siguienteNumero(){
+  let year = new Date().getFullYear();
+  let contador = loadJSON(LS.contador, {year:year, n:464});
+  if(contador.year !== year){ contador = {year:year, n:0}; }
+  contador.n += 1;
+  saveJSON(LS.contador, contador);
+  return year + "-" + contador.n;
+}
+
+/* ======================= TABS ======================= */
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab').forEach(s=>s.style.display='none');
+    document.getElementById('tab-'+btn.dataset.tab).style.display='block';
+    if(btn.dataset.tab === 'historial') renderHistorial();
+  });
+});
+
+/* ======================= LOGO ======================= */
+function aplicarLogo(){
+  const wrap = document.getElementById('logoWrap');
+  if(config.logo){
+    wrap.innerHTML = '<img src="'+config.logo+'" alt="PLUO">';
+  } else {
+    wrap.innerHTML = '<span class="logo-fallback">PLUO</span>';
+  }
+}
+
+/* ======================= RENDER CLIENTE SELECT ======================= */
+function renderClientes(){
+  const sel = document.getElementById('selCliente');
+  sel.innerHTML = clientes.map((c,i)=>`<option value="${i}">${c.nombre} — ${c.rut}</option>`).join('');
+  actualizarInfoCliente();
+}
+function actualizarInfoCliente(){
+  const i = document.getElementById('selCliente').value;
+  const c = clientes[i];
+  const info = document.getElementById('clienteInfo');
+  info.textContent = c ? `Contacto: ${c.contacto||'-'} · ${c.email||'-'} · ${c.telefono||'-'}` : '';
+}
+document.getElementById('selCliente').addEventListener('change', actualizarInfoCliente);
+
+/* ======================= RENDER PRODUCTOS ======================= */
+function renderProductos(){
+  const tbody = document.getElementById('tblProductos');
+  tbody.innerHTML = productos.map((p,i)=>`
+    <tr>
+      <td><input type="checkbox" class="chk-prod" data-i="${i}"></td>
+      <td><div class="prod-nombre">${p.nombre}</div><div class="prod-code">${p.codigo} · USD ${Number(p.precio).toFixed(2)}</div></td>
+      <td><input type="number" class="qty" data-i="${i}" value="1" min="1"></td>
+      <td><input type="number" class="desc" data-i="${i}" value="${p.descuento||0}" min="0" max="100"></td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('input').forEach(inp=>inp.addEventListener('input', calcularTotales));
+  calcularTotales();
+}
+
+function itemsSeleccionados(){
+  const filas = document.querySelectorAll('#tblProductos tr');
+  const items = [];
+  filas.forEach(tr=>{
+    const chk = tr.querySelector('.chk-prod');
+    if(chk && chk.checked){
+      const i = chk.dataset.i;
+      const p = productos[i];
+      const qty = Number(tr.querySelector('.qty').value)||1;
+      const desc = Number(tr.querySelector('.desc').value)||0;
+      const precioNeto = p.precio * (1 - desc/100);
+      items.push({...p, cantidad:qty, descuentoAplicado:desc, precioUnitNeto:precioNeto, subtotal:precioNeto*qty});
+    }
+  });
+  return items;
+}
+
+function calcularTotales(){
+  const items = itemsSeleccionados();
+  const neto = items.reduce((s,i)=>s+i.subtotal,0);
+  const iva = neto * 0.19;
+  const total = neto + iva;
+  document.getElementById('totNeto').textContent = fmtMoneda(neto);
+  document.getElementById('totIva').textContent = fmtMoneda(iva);
+  document.getElementById('totFinal').textContent = fmtMoneda(total);
+  return {items, neto, iva, total};
+}
+
+/* ======================= GENERAR COTIZACION ======================= */
+document.getElementById('btnGenerar').addEventListener('click', ()=>{
+  const {items, neto, iva, total} = calcularTotales();
+  if(items.length === 0){ toast('Selecciona al menos un producto'); return; }
+  const cliente = clientes[document.getElementById('selCliente').value];
+  const numero = siguienteNumero();
+  const fecha = new Date();
+
+  cotizacionActual = {
+    numero, fecha: fecha.toISOString(), cliente, items, neto, iva, total,
+    condiciones: {...config, entrega:config.entrega, plazoPago:config.plazoPago, moneda:config.moneda, vigencia:config.vigencia}
+  };
+
+  historial.unshift(cotizacionActual);
+  saveJSON(LS.historial, historial);
+
+  document.getElementById('numGenerada').textContent = numero;
+  document.getElementById('postGenerar').style.display = 'block';
+  toast('Cotización ' + numero + ' generada');
+
+  enviarAAppsScript(cotizacionActual);
+});
+
+/* ======================= PDF ======================= */
+function construirHtmlPdf(cot){
+  const filas = cot.items.map(it=>`
+    <tr>
+      <td>${it.codigo}</td>
+      <td>${it.nombre}</td>
+      <td>${it.cantidad}</td>
+      <td>USD ${it.precioUnitNeto.toFixed(2)}</td>
+      <td>${it.descuentoAplicado}%</td>
+      <td>USD ${it.subtotal.toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  const logoHtml = config.logo
+    ? `<img src="${config.logo}" alt="PLUO">`
+    : `<span style="font-weight:700;color:#0b3d66;">PLUO</span>`;
+
+  return `
+    <div class="pdf-header">
+      <div class="pdf-logo">${logoHtml}</div>
+      <div class="pdf-empresa">
+        <b>${EMPRESA.nombre}</b><br>
+        RUT ${EMPRESA.rut}<br>
+        ${EMPRESA.direccion}<br>
+        ${EMPRESA.gerente} · ${EMPRESA.email} · ${EMPRESA.telefono}
+      </div>
+      <div class="pdf-titulo">
+        <h2>COTIZACIÓN</h2>
+        <div>N° ${cot.numero}</div>
+        <div>${new Date(cot.fecha).toLocaleDateString('es-CL')}</div>
+      </div>
+    </div>
+    <div class="pdf-info-grid">
+      <div><b>Cliente</b>${cot.cliente.nombre}<br>RUT ${cot.cliente.rut}<br>${cot.cliente.contacto||''}</div>
+      <div><b>Contacto</b>${cot.cliente.email||'-'}<br>${cot.cliente.telefono||'-'}</div>
+    </div>
+    <table class="pdf-table">
+      <thead><tr><th>Código</th><th>Producto</th><th>Cant.</th><th>P. Unit.</th><th>Desc.</th><th>Subtotal</th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+    <div class="pdf-totales">
+      <div><span>Neto</span><span>USD ${cot.neto.toFixed(2)}</span></div>
+      <div><span>IVA (19%)</span><span>USD ${cot.iva.toFixed(2)}</span></div>
+      <div class="final"><span>Total</span><span>USD ${cot.total.toFixed(2)}</span></div>
+    </div>
+    <div class="pdf-condiciones">
+      <b>Condiciones de venta</b><br>
+      Entrega: ${cot.condiciones.entrega||'-'} · Plazo de pago: ${cot.condiciones.plazoPago||'-'} ·
+      Moneda: ${cot.condiciones.moneda||'-'} · Vigencia: ${cot.condiciones.vigencia||'-'}
+    </div>
+    <div class="pdf-footer">PLUO SPA · Cotización generada desde PLUO Cotizaciones PWA</div>
+  `;
+}
+
+function generarPdfBlob(cot, callback){
+  const cont = document.getElementById('pdf-render');
+  cont.innerHTML = construirHtmlPdf(cot);
+  const opt = {
+    margin: 10,
+    filename: `Cotizacion_${cot.numero}.pdf`,
+    image: {type:'jpeg', quality:0.98},
+    html2canvas: {scale:2},
+    jsPDF: {unit:'mm', format:'letter', orientation:'portrait'}
+  };
+  html2pdf().set(opt).from(cont).toPdf().get('pdf').then(pdf=>{
+    callback(pdf, opt.filename);
+  });
+}
+
+document.getElementById('btnVerPdf').addEventListener('click', ()=>{
+  if(!cotizacionActual) return;
+  generarPdfBlob(cotizacionActual, (pdf)=>{
+    const blob = pdf.output('blob');
+    window.open(URL.createObjectURL(blob), '_blank');
+  });
+});
+
+document.getElementById('btnDescargar').addEventListener('click', ()=>{
+  if(!cotizacionActual) return;
+  const cont = document.getElementById('pdf-render');
+  cont.innerHTML = construirHtmlPdf(cotizacionActual);
+  html2pdf().set({
+    margin:10, filename:`Cotizacion_${cotizacionActual.numero}.pdf`,
+    image:{type:'jpeg', quality:0.98}, html2canvas:{scale:2},
+    jsPDF:{unit:'mm', format:'letter', orientation:'portrait'}
+  }).from(cont).save();
+});
+
+document.getElementById('btnEmail').addEventListener('click', ()=>{
+  if(!cotizacionActual) return;
+  const c = cotizacionActual;
+  const asunto = encodeURIComponent(`Cotización PLUO ${c.numero} — ${c.cliente.nombre}`);
+  const cuerpo = encodeURIComponent(
+    `Estimado/a,\n\nAdjuntamos cotización ${c.numero} por ${fmtMoneda(c.total)}.\n\nSaludos,\n${EMPRESA.gerente}\n${EMPRESA.nombre}`
+  );
+  window.location.href = `mailto:${c.cliente.email||''}?subject=${asunto}&body=${cuerpo}`;
+});
+
+document.getElementById('btnWhatsapp').addEventListener('click', ()=>{
+  if(!cotizacionActual) return;
+  const c = cotizacionActual;
+  const msg = encodeURIComponent(
+    `Hola, te comparto la cotización PLUO N° ${c.numero} por ${fmtMoneda(c.total)}. Cualquier duda, quedo atento. Saludos, ${EMPRESA.gerente}.`
+  );
+  const tel = (c.cliente.telefono||'').replace(/\D/g,'');
+  window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+});
+
+/* ======================= HISTORIAL ======================= */
+function renderHistorial(){
+  const cont = document.getElementById('listaHistorial');
+  if(historial.length === 0){
+    cont.innerHTML = '<div class="empty">Sin cotizaciones aún</div>';
+    return;
+  }
+  cont.innerHTML = historial.map((c,i)=>`
+    <div class="hist-item">
+      <div class="hist-top"><span>${c.numero}</span><span>${fmtMoneda(c.total)}</span></div>
+      <div class="hist-sub">${c.cliente.nombre} · ${c.cliente.contacto||'-'} · ${new Date(c.fecha).toLocaleString('es-CL')}</div>
+      <div class="hist-actions">
+        <button onclick="verHistorial(${i})">👁️ Ver</button>
+        <button onclick="reimprimirHistorial(${i})">🖨️ Reimprimir</button>
+        <button class="del" onclick="eliminarHistorial(${i})">🗑️ Eliminar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function verHistorial(i){
+  generarPdfBlob(historial[i], (pdf)=>{
+    const blob = pdf.output('blob');
+    window.open(URL.createObjectURL(blob), '_blank');
+  });
+}
+function reimprimirHistorial(i){
+  const c = historial[i];
+  const cont = document.getElementById('pdf-render');
+  cont.innerHTML = construirHtmlPdf(c);
+  html2pdf().set({
+    margin:10, filename:`Cotizacion_${c.numero}.pdf`,
+    image:{type:'jpeg', quality:0.98}, html2canvas:{scale:2},
+    jsPDF:{unit:'mm', format:'letter', orientation:'portrait'}
+  }).from(cont).save();
+}
+function eliminarHistorial(i){
+  if(!confirm('¿Eliminar esta cotización del historial?')) return;
+  historial.splice(i,1);
+  saveJSON(LS.historial, historial);
+  renderHistorial();
+}
+document.getElementById('btnLimpiarHist').addEventListener('click', ()=>{
+  if(!confirm('¿Eliminar todo el historial? Esta acción no se puede deshacer.')) return;
+  historial = [];
+  saveJSON(LS.historial, historial);
+  renderHistorial();
+});
+document.getElementById('btnExportCsv').addEventListener('click', ()=>{
+  if(historial.length === 0){ toast('No hay cotizaciones para exportar'); return; }
+  let csv = 'Numero,Cliente,RUT,Contacto,Total,Fecha\n';
+  historial.forEach(c=>{
+    csv += [c.numero, c.cliente.nombre, c.cliente.rut, c.cliente.contacto||'', c.total.toFixed(2), new Date(c.fecha).toLocaleString('es-CL')]
+      .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',') + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'PLUO_Historial_Cotizaciones.csv';
+  a.click();
+});
+
+/* ======================= CLIENTE NUEVO ======================= */
+document.getElementById('btnGuardarCliente').addEventListener('click', ()=>{
+  const nombre = document.getElementById('cliNombre').value.trim();
+  const rut = document.getElementById('cliRut').value.trim();
+  if(!nombre || !rut){ toast('Nombre y RUT son obligatorios'); return; }
+  clientes.push({
+    nombre, rut,
+    contacto: document.getElementById('cliContacto').value.trim(),
+    email: document.getElementById('cliEmail').value.trim(),
+    telefono: document.getElementById('cliTelefono').value.trim()
+  });
+  saveJSON(LS.clientes, clientes);
+  renderClientes();
+  ['cliNombre','cliRut','cliContacto','cliEmail','cliTelefono'].forEach(id=>document.getElementById(id).value='');
+  toast('Cliente guardado');
+});
+
+/* ======================= PRODUCTO NUEVO ======================= */
+document.getElementById('btnGuardarProducto').addEventListener('click', ()=>{
+  const codigo = document.getElementById('prodCodigo').value.trim();
+  const nombre = document.getElementById('prodNombre').value.trim();
+  const precio = Number(document.getElementById('prodPrecio').value);
+  if(!codigo || !nombre || !precio){ toast('Código, nombre y precio son obligatorios'); return; }
+  productos.push({
+    codigo, nombre, precio,
+    descuento: Number(document.getElementById('prodDescuento').value)||0,
+    linea: document.getElementById('prodLinea').value.trim()
+  });
+  saveJSON(LS.productos, productos);
+  renderProductos();
+  ['prodCodigo','prodNombre','prodPrecio','prodLinea'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('prodDescuento').value = 0;
+  toast('Producto guardado');
+});
+
+/* ======================= CONFIGURACION ======================= */
+function cargarConfigEnForm(){
+  document.getElementById('cfgEntrega').value = config.entrega||'';
+  document.getElementById('cfgPlazoPago').value = config.plazoPago||'';
+  document.getElementById('cfgMoneda').value = config.moneda||'USD';
+  document.getElementById('cfgVigencia').value = config.vigencia||'';
+  document.getElementById('cfgLogo').value = config.logo||'';
+  document.getElementById('cfgSheetId').value = config.sheetId||'';
+  document.getElementById('cfgApiKey').value = config.apiKey||'';
+  document.getElementById('cfgRangoClientes').value = config.rangoClientes||'Clientes!A2:E';
+  document.getElementById('cfgRangoProductos').value = config.rangoProductos||'Productos!A2:E';
+  document.getElementById('cfgScriptUrl').value = config.scriptUrl||'';
+}
+
+document.getElementById('btnGuardarConfig').addEventListener('click', ()=>{
+  config.entrega = document.getElementById('cfgEntrega').value.trim();
+  config.plazoPago = document.getElementById('cfgPlazoPago').value.trim();
+  config.moneda = document.getElementById('cfgMoneda').value;
+  config.vigencia = document.getElementById('cfgVigencia').value.trim();
+  saveJSON(LS.config, config);
+  calcularTotales();
+  toast('Condiciones de venta guardadas');
+});
+
+document.getElementById('btnGuardarLogo').addEventListener('click', ()=>{
+  config.logo = document.getElementById('cfgLogo').value.trim();
+  saveJSON(LS.config, config);
+  aplicarLogo();
+  toast('Logo actualizado');
+});
+
+document.getElementById('btnGuardarSheets').addEventListener('click', ()=>{
+  config.sheetId = document.getElementById('cfgSheetId').value.trim();
+  config.apiKey = document.getElementById('cfgApiKey').value.trim();
+  config.rangoClientes = document.getElementById('cfgRangoClientes').value.trim();
+  config.rangoProductos = document.getElementById('cfgRangoProductos').value.trim();
+  saveJSON(LS.config, config);
+  toast('Configuración de Google Sheets guardada');
+});
+
+document.getElementById('btnGuardarScript').addEventListener('click', ()=>{
+  config.scriptUrl = document.getElementById('cfgScriptUrl').value.trim();
+  saveJSON(LS.config, config);
+  toast('URL de Apps Script guardada');
+});
+
+/* ======================= GOOGLE SHEETS: LECTURA (API KEY) ======================= */
+async function leerRangoSheet(rango){
+  if(!config.sheetId || !config.apiKey) throw new Error('Falta Sheet ID o API Key');
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${config.sheetId}/values/${encodeURIComponent(rango)}?key=${config.apiKey}`;
+  const res = await fetch(url);
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.error && err.error.message ? err.error.message : ('HTTP ' + res.status));
+  }
+  const data = await res.json();
+  return data.values || [];
+}
+
+async function sincronizarSheets(){
+  const status = document.getElementById('syncStatus');
+  status.textContent = 'Sincronizando...';
+  try{
+    const filasClientes = await leerRangoSheet(config.rangoClientes || 'Clientes!A2:E');
+    if(filasClientes.length){
+      clientes = filasClientes.filter(f=>f[0]).map(f=>({
+        nombre:f[0]||'', rut:f[1]||'', contacto:f[2]||'', email:f[3]||'', telefono:f[4]||''
+      }));
+      saveJSON(LS.clientes, clientes);
+      renderClientes();
+    }
+    const filasProductos = await leerRangoSheet(config.rangoProductos || 'Productos!A2:E');
+    if(filasProductos.length){
+      productos = filasProductos.filter(f=>f[0]).map(f=>({
+        codigo:f[0]||'', nombre:f[1]||'', precio:Number(f[2])||0, descuento:Number(f[3])||0, linea:f[4]||''
+      }));
+      saveJSON(LS.productos, productos);
+      renderProductos();
+    }
+    status.textContent = `Sincronizado: ${clientes.length} clientes, ${productos.length} productos (${new Date().toLocaleTimeString('es-CL')})`;
+    toast('Sincronización completada');
+  }catch(e){
+    status.textContent = 'Error al sincronizar: ' + e.message;
+    toast('Error al sincronizar con Google Sheets');
+  }
+}
+document.getElementById('btnSincronizar').addEventListener('click', sincronizarSheets);
+
+/* ======================= APPS SCRIPT: ESCRITURA ======================= */
+function enviarAAppsScript(cot){
+  if(!config.scriptUrl) return;
+  fetch(config.scriptUrl, {
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({
+      numero: cot.numero,
+      fecha: cot.fecha,
+      cliente: cot.cliente.nombre,
+      rut: cot.cliente.rut,
+      contacto: cot.cliente.contacto,
+      total: cot.total,
+      moneda: config.moneda
+    })
+  }).catch(()=>{ /* offline: la cotización ya quedó guardada localmente */ });
+}
+
+/* ======================= INIT ======================= */
+cargarConfigEnForm();
+aplicarLogo();
+renderClientes();
+renderProductos();
+</script>
+</body>
+</html>
