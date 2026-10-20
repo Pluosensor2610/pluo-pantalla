@@ -352,6 +352,10 @@
             <div class="section">
                 <div class="section-title">📋 Cliente</div>
                 <div class="form-group">
+                    <label>Buscar cliente</label>
+                    <input type="text" id="buscarCliente" placeholder="Nombre, RUT o contacto..." oninput="filtrarClientes()">
+                </div>
+                <div class="form-group">
                     <label>Seleccionar cliente</label>
                     <select id="selectCliente">
                         <option value="">-- Seleccionar --</option>
@@ -361,6 +365,10 @@
 
             <div class="section">
                 <div class="section-title">🛠️ Productos (edita cantidad y descuento)</div>
+                <div class="form-group">
+                    <label>Buscar producto</label>
+                    <input type="text" id="buscarProducto" placeholder="Nombre o código..." oninput="filtrarProductos()">
+                </div>
                 <div id="productosList" class="productos-list"></div>
             </div>
 
@@ -771,13 +779,31 @@
 
         function actualizarSelectClientes() {
             const select = document.getElementById('selectCliente');
+            const seleccionActual = select.value;
+            const filtro = (document.getElementById('buscarCliente')?.value || '').trim().toLowerCase();
+
+            const filtrados = filtro
+                ? CLIENTES.filter(c =>
+                    c.empresa.toLowerCase().includes(filtro) ||
+                    (c.rut || '').toLowerCase().includes(filtro) ||
+                    (c.contacto || '').toLowerCase().includes(filtro))
+                : CLIENTES;
+
             select.innerHTML = '<option value="">-- Seleccionar --</option>';
-            CLIENTES.forEach(c => {
+            filtrados.forEach(c => {
                 const option = document.createElement('option');
                 option.value = c.id;
                 option.textContent = c.empresa + " - " + c.contacto;
                 select.appendChild(option);
             });
+
+            if (filtrados.some(c => String(c.id) === seleccionActual)) {
+                select.value = seleccionActual;
+            }
+        }
+
+        function filtrarClientes() {
+            actualizarSelectClientes();
         }
 
         function cargarProductos() {
@@ -790,6 +816,8 @@
             PRODUCTOS.forEach(p => {
                 const div = document.createElement('div');
                 div.className = 'producto-item';
+                div.dataset.nombre = p.nombre.toLowerCase();
+                div.dataset.codigo = (p.codigo || '').toLowerCase();
                 div.innerHTML = `
                     <input type="checkbox" class="producto-check" data-id="${p.id}" onchange="calcularTotales()">
                     <div class="producto-info">
@@ -802,6 +830,15 @@
                     </div>
                 `;
                 lista.appendChild(div);
+            });
+            filtrarProductos();
+        }
+
+        function filtrarProductos() {
+            const filtro = (document.getElementById('buscarProducto')?.value || '').trim().toLowerCase();
+            document.querySelectorAll('#productosList .producto-item').forEach(div => {
+                const coincide = !filtro || div.dataset.nombre.includes(filtro) || div.dataset.codigo.includes(filtro);
+                div.style.display = coincide ? '' : 'none';
             });
         }
 
