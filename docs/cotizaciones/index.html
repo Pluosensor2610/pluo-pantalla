@@ -684,11 +684,11 @@
                 if (!data.ok) throw new Error(data.error || 'Error desconocido');
 
                 let clientesAgregados = 0;
-                (data.clientes || []).forEach(c => {
+                (data.clientes || []).forEach((c, i) => {
                     const yaExiste = CLIENTES.some(existente => existente.rut === c.rut);
                     if (!yaExiste && c.rut) {
                         CLIENTES.push({
-                            id: Date.now() + Math.random(),
+                            id: Date.now() + i,
                             empresa: c.empresa,
                             rut: c.rut,
                             contacto: c.contacto,
@@ -700,11 +700,11 @@
                 });
 
                 let productosAgregados = 0;
-                (data.productos || []).forEach(p => {
+                (data.productos || []).forEach((p, i) => {
                     const yaExiste = PRODUCTOS.some(existente => existente.codigo === p.codigo);
                     if (!yaExiste && p.codigo) {
                         PRODUCTOS.push({
-                            id: Date.now() + Math.random(),
+                            id: Date.now() + 100000 + i,
                             codigo: p.codigo,
                             nombre: p.nombre,
                             precio: parseFloat(p.precio) || 0,
@@ -819,7 +819,22 @@
         function cargarDelStorage() {
             const clientesGuardados = JSON.parse(localStorage.getItem('pluoClientes')) || [];
             const productosGuardados = JSON.parse(localStorage.getItem('pluoProductos')) || [];
-            
+
+            let huboReparacion = false;
+            let contadorReparacion = 0;
+            clientesGuardados.forEach(c => {
+                if (!Number.isInteger(c.id)) {
+                    c.id = Date.now() + (contadorReparacion++);
+                    huboReparacion = true;
+                }
+            });
+            productosGuardados.forEach(p => {
+                if (!Number.isInteger(p.id)) {
+                    p.id = Date.now() + (contadorReparacion++);
+                    huboReparacion = true;
+                }
+            });
+
             if (clientesGuardados.length > 0) {
                 CLIENTES = [...CLIENTES_BASE, ...clientesGuardados];
                 actualizarSelectClientes();
@@ -827,6 +842,12 @@
             if (productosGuardados.length > 0) {
                 PRODUCTOS = [...PRODUCTOS_BASE, ...productosGuardados];
                 actualizarProductos();
+            }
+
+            if (huboReparacion) {
+                guardarClientesEnStorage();
+                guardarProductosEnStorage();
+                console.log('IDs reparados en clientes/productos importados');
             }
 
             mostrarListasGuardadas();
