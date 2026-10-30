@@ -375,18 +375,26 @@
 
             <div class="section">
                 <div class="section-title">💰 Totales</div>
+                <div class="form-group">
+                    <label>Moneda de esta cotización</label>
+                    <select id="selectMonedaCotizacion" onchange="calcularTotales()">
+                        <option value="USD">USD - Dólar</option>
+                        <option value="CLP">CLP - Peso Chileno</option>
+                        <option value="EUR">EUR - Euro</option>
+                    </select>
+                </div>
                 <div class="totales">
                     <div class="total-row">
                         <span>Neto:</span>
-                        <span>USD <span id="neto">0.00</span></span>
+                        <span><span id="monedaNeto">USD</span> <span id="neto">0.00</span></span>
                     </div>
                     <div class="total-row">
                         <span>IVA (19%):</span>
-                        <span>USD <span id="iva">0.00</span></span>
+                        <span><span id="monedaIva">USD</span> <span id="iva">0.00</span></span>
                     </div>
                     <div class="total-row grand">
                         <span>Total:</span>
-                        <span>USD <span id="total">0.00</span></span>
+                        <span><span id="monedaTotal">USD</span> <span id="total">0.00</span></span>
                     </div>
                 </div>
 
@@ -768,6 +776,8 @@
             document.getElementById('configPago').value = CONFIG_VENTA.pago;
             document.getElementById('configMoneda').value = CONFIG_VENTA.moneda;
             document.getElementById('configVigencia').value = CONFIG_VENTA.vigencia;
+            const selectMoneda = document.getElementById('selectMonedaCotizacion');
+            if (selectMoneda) selectMoneda.value = CONFIG_VENTA.moneda || 'USD';
             mostrarConfiguracionGuardada();
         }
 
@@ -954,17 +964,22 @@
 
             const iva = neto * CONFIG.iva;
             const total = neto + iva;
+            const moneda = document.getElementById('selectMonedaCotizacion').value || 'USD';
 
             document.getElementById('neto').textContent = neto.toFixed(2);
             document.getElementById('iva').textContent = iva.toFixed(2);
             document.getElementById('total').textContent = total.toFixed(2);
+            document.getElementById('monedaNeto').textContent = moneda;
+            document.getElementById('monedaIva').textContent = moneda;
+            document.getElementById('monedaTotal').textContent = moneda;
 
             cotizacionActual = {
                 cliente: CLIENTES.find(c => c.id === parseInt(document.getElementById('selectCliente').value)),
                 items: items,
                 neto: neto,
                 iva: iva,
-                total: total
+                total: total,
+                moneda: moneda
             };
         }
 
@@ -1384,7 +1399,7 @@
                 neto: cotizacionActual.neto,
                 iva: cotizacionActual.iva,
                 total: cotizacionActual.total,
-                moneda: CONFIG_VENTA.moneda,
+                moneda: cotizacionActual.moneda || CONFIG_VENTA.moneda,
                 entrega: CONFIG_VENTA.entrega,
                 lugarEntrega: CONFIG_VENTA.lugarEntrega,
                 pago: CONFIG_VENTA.pago,
@@ -1468,7 +1483,7 @@
                 neto: cotizacion.neto,
                 iva: cotizacion.iva,
                 total: cotizacion.total,
-                moneda: CONFIG_VENTA.moneda,
+                moneda: pdfGenerado.moneda || CONFIG_VENTA.moneda,
                 fecha: cotizacion.fecha,
                 hora: cotizacion.hora
             });
@@ -1633,6 +1648,7 @@
             document.getElementById('mensaje').innerHTML = '';
             document.getElementById('fichaTecnicaInput').value = '';
             document.getElementById('fichaTecnicaNombre').textContent = '';
+            document.getElementById('selectMonedaCotizacion').value = CONFIG_VENTA.moneda || 'USD';
             fichaTecnicaFile = null;
             cotizacionActual = {};
             calcularTotales();
