@@ -486,6 +486,14 @@
                 </div>
                 <button class="btn-success" onclick="guardarSyncUrl()">✅ Guardar URL</button>
                 <div id="mensajeSyncUrl" style="margin-top: 1rem;"></div>
+
+                <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                    <p style="font-size: 12px; color: #666; margin-bottom: 0.75rem;">
+                        ¿Cambiaste de teléfono o perdiste tus datos? Trae de vuelta los clientes y productos guardados en tu planilla.
+                    </p>
+                    <button class="btn-secondary" onclick="importarDesdeSheets()">⬇️ Importar desde Google Sheets</button>
+                    <div id="mensajeImportar" style="margin-top: 1rem;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -660,6 +668,62 @@
         function cargarSyncUrl() {
             const campo = document.getElementById('configSyncUrl');
             if (campo) campo.value = SYNC_URL;
+        }
+
+        async function importarDesdeSheets() {
+            const msg = document.getElementById('mensajeImportar');
+            if (!SYNC_URL) {
+                msg.innerHTML = '<p style="color:#c62828;">Primero guarda la URL de respaldo arriba.</p>';
+                return;
+            }
+            msg.innerHTML = '<p style="color:#666;">Importando...</p>';
+            try {
+                const resp = await fetch(`${SYNC_URL}?accion=exportar`);
+                const data = await resp.json();
+                if (!data.ok) throw new Error(data.error || 'Error desconocido');
+
+                let clientesAgregados = 0;
+                (data.clientes || []).forEach(c => {
+                    const yaExiste = CLIENTES.some(existente => existente.rut === c.rut);
+                    if (!yaExiste && c.rut) {
+                        CLIENTES.push({
+                            id: Date.now() + Math.random(),
+                            empresa: c.empresa,
+                            rut: c.rut,
+                            contacto: c.contacto,
+                            email: c.email || '',
+                            telefono: c.telefono || ''
+                        });
+                        clientesAgregados++;
+                    }
+                });
+
+                let productosAgregados = 0;
+                (data.productos || []).forEach(p => {
+                    const yaExiste = PRODUCTOS.some(existente => existente.codigo === p.codigo);
+                    if (!yaExiste && p.codigo) {
+                        PRODUCTOS.push({
+                            id: Date.now() + Math.random(),
+                            codigo: p.codigo,
+                            nombre: p.nombre,
+                            precio: parseFloat(p.precio) || 0,
+                            descuento: parseFloat(p.descuento) || 0,
+                            linea: p.linea || ''
+                        });
+                        productosAgregados++;
+                    }
+                });
+
+                guardarClientesEnStorage();
+                guardarProductosEnStorage();
+                actualizarSelectClientes();
+                actualizarProductos();
+                mostrarListasGuardadas();
+
+                msg.innerHTML = `<p style="color:#2e7d32;">✅ Importados ${clientesAgregados} clientes y ${productosAgregados} productos nuevos.</p>`;
+            } catch (err) {
+                msg.innerHTML = `<p style="color:#c62828;">Error al importar: ${err.message}</p>`;
+            }
         }
 
         function sincronizarDato(tipo, payload) {
