@@ -709,7 +709,7 @@
 
                 let productosAgregados = 0;
                 (data.productos || []).forEach((p, i) => {
-                    const yaExiste = PRODUCTOS.some(existente => existente.codigo === p.codigo);
+                    const yaExiste = PRODUCTOS.some(existente => existente.codigo === p.codigo && existente.nombre === p.nombre);
                     if (!yaExiste && p.codigo) {
                         PRODUCTOS.push({
                             id: Date.now() + 100000 + i,
